@@ -12,18 +12,14 @@ import {
 } from "@mui/material";
 import Popup from "../components/common/Popup";
 import ReusableTable from "../components/common/ReusableTable";
-import {
-  createPharmacy,
-  getallPharmacies,
-} from "../service/pharmacy.service";
+import { createPharmacy, getallPharmacies } from "../service/pharmacy.service";
 import PharmacyModel from "../models/pharmacy";
 import { popAlert } from "../utils/alerts";
 import colors from "../assets/styles/colors";
 import TableAction from "../components/common/TableActions";
 import { useNavigate } from "react-router-dom";
-import Paper from '@mui/material/Paper';
+import Paper from "@mui/material/Paper";
 import MapGoogal from "./MapGoogal";
-
 
 //table columns
 const tableColumns = [
@@ -66,8 +62,7 @@ const Pharmacy = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [refresh, setRefresh] = useState(false);
   const [keyword, setKeyword] = useState("");
-  
- 
+
   const handleSubmit = async (e) => {
     console.log("Hi");
     e.preventDefault();
@@ -89,7 +84,7 @@ const Pharmacy = () => {
     setLoading(false);
   };
 
-  const handleMapInput = (input) =>{
+  const handleMapInput = (input) => {
     setInputs(input);
   };
 
@@ -114,7 +109,6 @@ const Pharmacy = () => {
   const handleSearch = (input) => {
     setKeyword(input);
   };
-
 
   useEffect(() => {
     let unmounted = false;
@@ -159,18 +153,18 @@ const Pharmacy = () => {
       unmounted = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination, refresh ,keyword]);
+  }, [pagination, refresh, keyword]);
 
   return (
     <React.Fragment>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
-        Pharmacies
+        Product
       </Typography>
       <Grid container spacing={2}>
         <Grid item xs={10}>
           <SearchBar
             onSearch={handleSearch}
-            placeholderText="Search Pharmacy..."
+            placeholderText="Search Product..."
           />
         </Grid>
         <Grid item xs={1}>
@@ -217,7 +211,7 @@ const Pharmacy = () => {
 
       {/* custom popup */}
       <Popup
-        title="Add Pharmacy"
+        title="Add Product"
         width={800}
         show={showPopup}
         onClose={handlePopupClose}
@@ -228,7 +222,7 @@ const Pharmacy = () => {
               <TextField
                 name="name"
                 variant="filled"
-                label="Enter Name"
+                label="Product Name"
                 fullWidth
                 value={inputs.name}
                 onChange={(e) =>
@@ -246,7 +240,7 @@ const Pharmacy = () => {
               <TextField
                 name="registrationNumber"
                 variant="filled"
-                label="Enter Registration Number"
+                label="Manufacturer"
                 fullWidth
                 value={inputs.registrationNumber}
                 onChange={(e) =>
@@ -269,6 +263,8 @@ const Pharmacy = () => {
                 label="Enter Address"
                 fullWidth
                 value={inputs.address}
+                type="number"
+                InputProps={{ inputProps: { min: 0 }, shrink: "true" }}
                 onChange={(e) =>
                   setInputs({
                     ...inputs,
@@ -283,51 +279,23 @@ const Pharmacy = () => {
 
             <Box sx={{ mb: 1 }}>
               <TextField
-                name="contactNumber"
+                name="address"
                 variant="filled"
-                label="Enter Contact Number"
+                label="Stock"
                 fullWidth
-                value={inputs.contactNumber}
+                value={inputs.address}
+                type="number"
+                InputProps={{ inputProps: { min: 0 }, shrink: "true" }}
                 onChange={(e) =>
                   setInputs({
                     ...inputs,
-                    contactNumber: e.target.value,
+                    address: e.target.value,
                   })
                 }
               />
-              {errors["contactNumber"] && (
-                <Typography color="error">{errors["contactNumber"]}</Typography>
+              {errors["address"] && (
+                <Typography color="error">{errors["address"]}</Typography>
               )}
-            </Box>
-            <Box sx={{ mb: 1 }}>
-              <TextField
-                name="email"
-                variant="filled"
-                label="Enter Email"
-                fullWidth
-                value={inputs.email}
-                onChange={(e) =>
-                  setInputs({
-                    ...inputs,
-                    email: e.target.value,
-                  })
-                }
-              />
-              {errors["email"] && (
-                <Typography color="error">{errors["email"]}</Typography>
-              )}
-            </Box>
-
-            <Box sx={{ mb: 1 }}>
-              <Typography>Select Location</Typography>
-                  <Paper elevation={0} sx={{height:200 }} >
-                    <MapGoogal inputs={inputs} OnLocationChange={handleMapInput}/>
-                  </Paper>
-                       
-
-                  {errors["location"] && (
-                    <Typography color="error">{errors["location"]}</Typography>
-                  )}
             </Box>
 
             <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>

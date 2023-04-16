@@ -38,7 +38,7 @@ const Sidebar = () => {
           background: colors.primary,
           color: colors.white,
           height: "100vh",
-          width: "20vw",
+          width: "18vw",
         },
       }}
     >
@@ -61,7 +61,7 @@ const Sidebar = () => {
               variant="h4"
               sx={{ fontWeight: "bold", color: colors.white }}
             >
-              MediHelp
+              Ayur
             </Typography>
           </Stack>
           <List>
@@ -74,7 +74,7 @@ const Sidebar = () => {
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton component="a" href="#simple-list">
+              <ListItemButton component="a" href="/users">
                 <ListItemIcon sx={{ display: { color: colors.white } }}>
                   <Person />
                 </ListItemIcon>
@@ -86,7 +86,7 @@ const Sidebar = () => {
                 <ListItemIcon sx={{ display: { color: colors.white } }}>
                   <Medication />
                 </ListItemIcon>
-                <ListItemText primary="Pharmacies" />
+                <ListItemText primary="Products" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
@@ -97,14 +97,14 @@ const Sidebar = () => {
                 <ListItemText primary="Orders" />
               </ListItemButton>
             </ListItem>
-            <ListItem disablePadding>
+            {/* <ListItem disablePadding>
               <ListItemButton component="a" href="/global-medicines">
                 <ListItemIcon sx={{ display: { color: colors.white } }}>
                   <Vaccines />
                 </ListItemIcon>
                 <ListItemText primary="Global Medicines" />
               </ListItemButton>
-            </ListItem>
+            </ListItem> */}
             <ListItem disablePadding>
               <ListItemButton component="a" href="#simple-list">
                 <ListItemIcon sx={{ display: { color: colors.white } }}>
