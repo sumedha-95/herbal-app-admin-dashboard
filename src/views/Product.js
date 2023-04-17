@@ -12,8 +12,8 @@ import {
 } from "@mui/material";
 import Popup from "../components/common/Popup";
 import ReusableTable from "../components/common/ReusableTable";
-import { createPharmacy, getallPharmacies } from "../service/product.service";
-import PharmacyModel from "../models/pharmacy";
+import { createPharmacy, createProduct, getallPharmacies } from "../service/product.service";
+import PharmacyModel from "../models/products";
 import { popAlert } from "../utils/alerts";
 import colors from "../assets/styles/colors";
 import TableAction from "../components/common/TableActions";
@@ -45,7 +45,7 @@ const tableColumns = [
   },
 ];
 
-const Pharmacy = () => {
+const Product = () => {
   const navigate = useNavigate();
   const [inputs, setInputs] = useState(PharmacyModel);
   const [errors, setErrors] = useState({});
@@ -67,7 +67,7 @@ const Pharmacy = () => {
     e.preventDefault();
     setLoading(true);
 
-    const response = await createPharmacy(inputs);
+    const response = await createProduct(inputs);
 
     if (response.success) {
       setRefresh(!refresh);
@@ -88,7 +88,7 @@ const Pharmacy = () => {
   };
 
   const handleClear = () => {
-    setInputs(createPharmacy);
+    setInputs(createProduct);
   };
 
   const handleView = (id) => {
@@ -109,50 +109,50 @@ const Pharmacy = () => {
     setKeyword(input);
   };
 
-  useEffect(() => {
-    let unmounted = false;
+  // useEffect(() => {
+  //   let unmounted = false;
 
-    if (!unmounted) setIsLoading(true);
+  //   if (!unmounted) setIsLoading(true);
 
-    const fetchAndSet = async () => {
-      const response = await getallPharmacies(
-        pagination.page,
-        pagination.limit,
-        pagination.orderBy,
-        keyword
-      );
+  //   const fetchAndSet = async () => {
+  //     const response = await getallPharmacies(
+  //       pagination.page,
+  //       pagination.limit,
+  //       pagination.orderBy,
+  //       keyword
+  //     );
 
-      if (response.success) {
-        if (!response.data) return;
+  //     if (response.success) {
+  //       if (!response.data) return;
 
-        let tableDataArr = [];
-        for (const addPharmacy of response.data.content) {
-          tableDataArr.push({
-            name: addPharmacy.name,
-            registrationNumber: addPharmacy.registrationNumber,
-            address: addPharmacy.address,
-            contactNumber: addPharmacy.contactNumber,
-            action: <TableAction id={addPharmacy._id} onView={handleView} />,
-          });
-        }
+  //       let tableDataArr = [];
+  //       for (const addPharmacy of response.data.content) {
+  //         tableDataArr.push({
+  //           name: addPharmacy.name,
+  //           registrationNumber: addPharmacy.registrationNumber,
+  //           address: addPharmacy.address,
+  //           contactNumber: addPharmacy.contactNumber,
+  //           action: <TableAction id={addPharmacy._id} onView={handleView} />,
+  //         });
+  //       }
 
-        if (!unmounted) {
-          setTotalElements(response.data.totalElements);
-          setTableRows(tableDataArr);
-        }
-      } else {
-        console.error(response?.data);
-      }
-      if (!unmounted) setIsLoading(false);
-    };
+  //       if (!unmounted) {
+  //         setTotalElements(response.data.totalElements);
+  //         setTableRows(tableDataArr);
+  //       }
+  //     } else {
+  //       console.error(response?.data);
+  //     }
+  //     if (!unmounted) setIsLoading(false);
+  //   };
 
-    fetchAndSet();
+  //   fetchAndSet();
 
-    return () => {
-      unmounted = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination, refresh, keyword]);
+  //   return () => {
+  //     unmounted = true;
+  //   };
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [pagination, refresh, keyword]);
 
   return (
     <React.Fragment>
@@ -237,66 +237,105 @@ const Pharmacy = () => {
             </Box>
             <Box sx={{ mb: 1 }}>
               <TextField
-                name="registrationNumber"
+                name="description"
                 variant="filled"
-                label="Manufacturer"
+                label="Product Description"
                 fullWidth
-                value={inputs.registrationNumber}
+                value={inputs.description}
                 onChange={(e) =>
                   setInputs({
                     ...inputs,
-                    registrationNumber: e.target.value,
+                    description: e.target.value,
                   })
                 }
               />
-              {errors["registrationNumber"] && (
+              {errors["description"] && (
                 <Typography color="error">
-                  {errors["registrationNumber"]}
+                  {errors["description"]}
                 </Typography>
               )}
             </Box>
             <Box sx={{ mb: 1 }}>
               <TextField
-                name="address"
+                name="price"
                 variant="filled"
-                label="Enter Address"
+                label="Product Price"
                 fullWidth
-                value={inputs.address}
+                value={inputs.price}
                 type="number"
                 InputProps={{ inputProps: { min: 0 }, shrink: "true" }}
                 onChange={(e) =>
                   setInputs({
                     ...inputs,
-                    address: e.target.value,
+                    price: e.target.value,
                   })
                 }
               />
-              {errors["address"] && (
-                <Typography color="error">{errors["address"]}</Typography>
+              {errors["price"] && (
+                <Typography color="error">{errors["price"]}</Typography>
               )}
             </Box>
 
             <Box sx={{ mb: 1 }}>
               <TextField
-                name="address"
+                name="unit"
                 variant="filled"
-                label="Stock"
+                label="Units"
                 fullWidth
-                value={inputs.address}
+                value={inputs.unit}
                 type="number"
                 InputProps={{ inputProps: { min: 0 }, shrink: "true" }}
                 onChange={(e) =>
                   setInputs({
                     ...inputs,
-                    address: e.target.value,
+                    unit: e.target.value,
                   })
                 }
               />
-              {errors["address"] && (
-                <Typography color="error">{errors["address"]}</Typography>
+              {errors["unit"] && (
+                <Typography color="error">{errors["unit"]}</Typography>
               )}
             </Box>
 
+            <Box sx={{ mb: 1 }}>
+              <TextField
+                name="unitAmount"
+                variant="filled"
+                label="Unit Amount"
+                fullWidth
+                value={inputs.unitAmount}
+                type="number"
+                InputProps={{ inputProps: { min: 0 }, shrink: "true" }}
+                onChange={(e) =>
+                  setInputs({
+                    ...inputs,
+                    unitAmount: e.target.value,
+                  })
+                }
+              />
+              {errors["unitAmount"] && (
+                <Typography color="error">{errors["unitAmount"]}</Typography>
+              )}
+            </Box>
+           <Box sx={{ mb: 1 }}>
+  <Typography>File</Typography>
+  <input
+    name="file"
+    type="file"
+    onChange={(e) => {
+      const file = e.target.files[0];
+      setInputs({
+        ...inputs,
+        file: file,
+      });
+    }}
+  />
+  {errors["file"] && (
+    <Typography color="error">{errors["file"]}</Typography>
+  )}
+</Box>
+
+           
             <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
               <Button
                 type="reset"
@@ -322,4 +361,4 @@ const Pharmacy = () => {
   );
 };
 
-export default Pharmacy;
+export default Product;

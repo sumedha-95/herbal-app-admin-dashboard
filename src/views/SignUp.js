@@ -29,7 +29,7 @@ const SignUp = () => {
     if (response.success) {
       response?.data &&
         popAlert("Success!", response?.data, "success").then(
-          (res) => {}
+          (res) => { window.location.replace("/auth/sign-in");}
         );
     } else {
       response?.data?.message &&
