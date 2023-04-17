@@ -8,7 +8,7 @@ import NavBar from "./components/common/NavBar";
 
 //view
 import Dashboard from "./views/Dashboard";
-import Pharmacy from "./views/Pharmacy";
+import Product from "./views/Product";
 import SignIn from "./views/SignIn";
 import SignUp from "./views/SignUp";
 import User from "./views/User";
@@ -40,7 +40,7 @@ const App = () => {
               <BrowserRouter>
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
-                  <Route path="/pharmacy" element={<Pharmacy />} />
+                  <Route path="/products" element={<Product />} />
                   <Route path="/users" element={<User />} />
                   <Route path="*" element={<PageNotFound />} />
                 </Routes>

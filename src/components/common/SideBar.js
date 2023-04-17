@@ -82,7 +82,7 @@ const Sidebar = () => {
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton component="a" href="/pharmacy">
+              <ListItemButton component="a" href="/products">
                 <ListItemIcon sx={{ display: { color: colors.white } }}>
                   <Medication />
                 </ListItemIcon>
