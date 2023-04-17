@@ -23,20 +23,18 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     const response = await createUser(inputs);
-
     if (response.success) {
       setLoading(false);
       dispatch(authActions.login(response.data));
-      response?.data?.message &&
-        popAlert("Success!", response?.data?.message, "success").then((res) => {
+      response?.data &&
+        popAlert("Success!", response?.data, "success").then((res) => {
           window.location.replace("/");
         });
     } else {
-      response?.data?.message &&
-        popAlert("Error!", response?.data?.message, "error");
-      response?.data?.data && setErrors(response.data.data);
+      response?.data &&
+        popAlert("Error!", response?.data, "error");
+      response?.data && setErrors(response.data);
     }
     setLoading(false);
   };
