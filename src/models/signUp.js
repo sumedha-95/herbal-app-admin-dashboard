@@ -1,13 +1,10 @@
 const signUp = {
-  firstName: "",
-  lastName: "",
-  NIC: "",
-  address: "",
-  mobile: "",
-  email: "",
-  birthday: "",
-  role: "pharmacy owner",
-  password: "",
+    email: "",
+    name: "",
+    address: "",
+    contactNumber: "",
+    role: "seller",
+    password: ""
 };
 
 export default signUp;

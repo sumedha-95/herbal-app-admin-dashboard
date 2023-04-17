@@ -12,14 +12,13 @@ import {
 } from "@mui/material";
 import Popup from "../components/common/Popup";
 import ReusableTable from "../components/common/ReusableTable";
-import { createPharmacy, getallPharmacies } from "../service/pharmacy.service";
+import { createPharmacy, getallPharmacies } from "../service/product.service";
 import PharmacyModel from "../models/pharmacy";
 import { popAlert } from "../utils/alerts";
 import colors from "../assets/styles/colors";
 import TableAction from "../components/common/TableActions";
 import { useNavigate } from "react-router-dom";
 import Paper from "@mui/material/Paper";
-import MapGoogal from "./MapGoogal";
 
 //table columns
 const tableColumns = [

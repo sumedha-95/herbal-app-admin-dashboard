@@ -18,8 +18,7 @@ const SignUp = () => {
   const [RegInputs, setRegInputs] = useState(signUp);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [conError, setConError] = useState("");
+   const [conError, setConError] = useState("");
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -28,8 +27,8 @@ const SignUp = () => {
     const response = await signUpUser(RegInputs);
 
     if (response.success) {
-      response?.data?.message &&
-        popAlert("Success!", response?.data?.message, "success").then(
+      response?.data &&
+        popAlert("Success!", response?.data, "success").then(
           (res) => {}
         );
     } else {
@@ -43,19 +42,6 @@ const SignUp = () => {
   const handleClear = () => {
     setRegInputs(signUp);
   };
-
-  useEffect(() => {
-    let unmounted = false;
-
-    if (RegInputs.password !== confirmPassword) {
-      if (!unmounted) setConError("Password does not match!");
-    } else {
-      if (!unmounted) setConError("");
-    }
-    return () => {
-      unmounted = true;
-    };
-  }, [confirmPassword, RegInputs.password]);
 
   return (
     <React.Fragment>
@@ -91,54 +77,18 @@ const SignUp = () => {
               <Box sx={{ mb: 2, m: 3 }}>
                 <TextField
                   variant="filled"
-                  label="First Name"
+                  label="Name"
                   fullWidth
-                  value={RegInputs.firstName}
+                  value={RegInputs.name}
                   onChange={(e) =>
                     setRegInputs({
                       ...RegInputs,
-                      firstName: e.target.value,
+                      name: e.target.value,
                     })
                   }
                 />
-                {errors["firstName"] && (
-                  <Typography color="error">{errors["firstName"]}</Typography>
-                )}
-              </Box>
-
-              <Box sx={{ mb: 2, m: 3 }}>
-                <TextField
-                  variant="filled"
-                  label="Last Name"
-                  fullWidth
-                  value={RegInputs.lastName}
-                  onChange={(e) =>
-                    setRegInputs({
-                      ...RegInputs,
-                      lastName: e.target.value,
-                    })
-                  }
-                />
-                {errors["lastName"] && (
-                  <Typography color="error">{errors["lastName"]}</Typography>
-                )}
-              </Box>
-
-              <Box sx={{ mb: 2, m: 3 }}>
-                <TextField
-                  variant="filled"
-                  label="NIC"
-                  fullWidth
-                  value={RegInputs.NIC}
-                  onChange={(e) =>
-                    setRegInputs({
-                      ...RegInputs,
-                      NIC: e.target.value,
-                    })
-                  }
-                />
-                {errors["NIC"] && (
-                  <Typography color="error">{errors["NIC"]}</Typography>
+                {errors["name"] && (
+                  <Typography color="error">{errors["name"]}</Typography>
                 )}
               </Box>
 
@@ -163,18 +113,36 @@ const SignUp = () => {
               <Box sx={{ mb: 2, m: 3 }}>
                 <TextField
                   variant="filled"
-                  label="Mobile"
+                  label="Contact Number"
                   fullWidth
-                  value={RegInputs.mobile}
+                  value={RegInputs.contactNumber}
                   onChange={(e) =>
                     setRegInputs({
                       ...RegInputs,
-                      mobile: e.target.value,
+                      contactNumber: e.target.value,
                     })
                   }
                 />
-                {errors["mobile"] && (
-                  <Typography color="error">{errors["mobile"]}</Typography>
+                {errors["contactNumber"] && (
+                  <Typography color="error">{errors["contactNumber"]}</Typography>
+                )}
+              </Box>
+
+              <Box sx={{ mb: 2, m: 3 }}>
+                <TextField
+                  variant="filled"
+                  label="Role"
+                  fullWidth
+                  value={RegInputs.role}
+                  onChange={(e) =>
+                    setRegInputs({
+                      ...RegInputs,
+                      role: e.target.value,
+                    })
+                  }
+                />
+                {errors["role"] && (
+                  <Typography color="error">{errors["role"]}</Typography>
                 )}
               </Box>
 
@@ -198,31 +166,6 @@ const SignUp = () => {
               </Box>
 
               <Box sx={{ mb: 2, m: 3 }}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    disableFuture
-                    label="Birth Date"
-                    fullWidth
-                    openTo="year"
-                    views={["year", "month", "day"]}
-                    value={RegInputs.birthday}
-                    onChange={(nValue) =>
-                      setRegInputs({
-                        ...RegInputs,
-                        birthday: nValue,
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField {...params} fullWidth />
-                    )}
-                  />
-                </LocalizationProvider>
-                {errors["birthday"] && (
-                  <Typography color="error">{errors["birthday"]}</Typography>
-                )}
-              </Box>
-
-              <Box sx={{ mb: 2, m: 3 }}>
                 <TextField
                   variant="filled"
                   label="Password"
@@ -239,19 +182,7 @@ const SignUp = () => {
                 {errors["password"] && (
                   <Typography color="error">{errors["password"]}</Typography>
                 )}
-              </Box>
-
-              <Box sx={{ mb: 2, m: 3 }}>
-                <TextField
-                  variant="filled"
-                  label="Confirm Password"
-                  type="password"
-                  fullWidth
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                {conError && <Typography color="error">{conError}</Typography>}
-              </Box>
+              </Box>         
 
               <Box
                 sx={{

@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
 import SearchBar from "../components/common/SearchBar";
 import AddButton from "../components/common/AddButton";
-// import ReportButton from "../components/common/ReportButton";
 import { Grid, Box, Typography, CircularProgress } from "@mui/material";
 
-import globalMedicine from "../models/globalMedicine";
-import {
-  createGlobalMedicine,
-  getGlobalMedicines,
-} from "../service/globalMedicines.service";
+
+
 import { popAlert } from "../utils/alerts";
 import colors from "../assets/styles/colors";
 import ReusableTable from "../components/common/ReusableTable";
@@ -71,54 +67,54 @@ const GlobalMedicens = () => {
     setKeyword(input);
   };
 
-  useEffect(() => {
-    let unmounted = false;
+  // useEffect(() => {
+  //   let unmounted = false;
 
-    if (!unmounted) setIsLoading(true);
+  //   if (!unmounted) setIsLoading(true);
 
-    const fetchAndSet = async () => {
-      const response = await getGlobalMedicines(
-        pagination.page,
-        pagination.limit,
-        pagination.orderBy,
-        keyword
-      );
+  //   const fetchAndSet = async () => {
+  //     const response = await getGlobalMedicines(
+  //       pagination.page,
+  //       pagination.limit,
+  //       pagination.orderBy,
+  //       keyword
+  //     );
 
-      if (response.success) {
-        if (!response.data) return;
+  //     if (response.success) {
+  //       if (!response.data) return;
 
-        let tableDataArr = [];
-        for (const globalMedicine of response.data.content) {
-          tableDataArr.push({
-            name: globalMedicine.name,
-            brand: globalMedicine.brand,
-            strength: globalMedicine.strength,
-            action: (
-              <TableAction
-                id={globalMedicine._id}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ),
-          });
-        }
+  //       let tableDataArr = [];
+  //       for (const globalMedicine of response.data.content) {
+  //         tableDataArr.push({
+  //           name: globalMedicine.name,
+  //           brand: globalMedicine.brand,
+  //           strength: globalMedicine.strength,
+  //           action: (
+  //             <TableAction
+  //               id={globalMedicine._id}
+  //               onEdit={handleEdit}
+  //               onDelete={handleDelete}
+  //             />
+  //           ),
+  //         });
+  //       }
 
-        if (!unmounted) {
-          setTotalElements(response.data.totalElements);
-          setTableRows(tableDataArr);
-        }
-      } else {
-        console.error(response?.data);
-      }
-      if (!unmounted) setIsLoading(false);
-    };
+  //       if (!unmounted) {
+  //         setTotalElements(response.data.totalElements);
+  //         setTableRows(tableDataArr);
+  //       }
+  //     } else {
+  //       console.error(response?.data);
+  //     }
+  //     if (!unmounted) setIsLoading(false);
+  //   };
 
-    fetchAndSet();
+  //   fetchAndSet();
 
-    return () => {
-      unmounted = true;
-    };
-  }, [pagination, refresh, keyword]);
+  //   return () => {
+  //     unmounted = true;
+  //   };
+  // }, [pagination, refresh, keyword]);
 
   return (
     <React.Fragment>

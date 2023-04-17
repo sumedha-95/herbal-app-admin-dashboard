@@ -3,7 +3,7 @@ import { buildResponse } from "../utils/responseBuilder";
 
 export const signUpUser = async (data) => {
   const response = await getApi()
-    .post("/users", data)
+    .post("/auth/register", data)
     .then((res) => {
       return buildResponse(true, res.data);
     })
