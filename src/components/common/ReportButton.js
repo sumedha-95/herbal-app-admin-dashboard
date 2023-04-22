@@ -13,16 +13,7 @@ const ReportButton = ({ children, setComponentRef, isLoading }) => {
       (document.title = `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()} Report`),
   });
 
-  useEffect(() => {
-    let unmounted = false;
 
-    if (!unmounted) setComponentRef(componentRef);
-
-    return () => {
-      unmounted = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <React.Fragment>
