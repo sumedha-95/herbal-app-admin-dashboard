@@ -9,34 +9,70 @@ import {
   CircularProgress,
   TextField,
   Button,
+  Card,
+  TableContainer,
+  TableHead,
+  TableCell,
+  TableRow,
+  Table,
+  TableBody,
+  TablePagination,
 } from "@mui/material";
 import Popup from "../components/common/Popup";
 import ReusableTable from "../components/common/ReusableTable";
-import { createPharmacy, createProduct, getallPharmacies } from "../service/product.service";
+import { createPharmacy, createProduct, getPaginatedProducts, getallPharmacies } from "../service/product.service";
 import PharmacyModel from "../models/products";
 import { popAlert } from "../utils/alerts";
 import colors from "../assets/styles/colors";
 import TableAction from "../components/common/TableActions";
 import { useNavigate } from "react-router-dom";
 import Paper from "@mui/material/Paper";
+import ReportButton from "../components/common/ReportButton";
+import ProductCard from "../components/common/ProductCard";
+import ProductDelete from "../components/common/ProductDelete";
 
 //table columns
 const tableColumns = [
   {
-    id: "registrationNumber",
-    label: "Reg Number",
-    minWidth: 140,
+    id: "image",
+    label: "Image",
+    minWidth: 40,
     align: "left",
   },
   {
     id: "name",
     label: "Name",
-    align: "right",
+    align: "center",
   },
   {
-    id: "contactNumber",
-    label: "Contact Number",
-    align: "right",
+    id: "unit",
+    label: "UoM",
+    align: "left",
+  },
+  {
+    id: "unitAmount",
+    label: "Units",
+    align: "left",
+  },
+    {
+    id: "price",
+    label: "Price",
+    align: "left",
+  },
+  {
+    id: "seller",
+    label: "Seller",
+    align: "left",
+  },
+  {
+    id: "description",
+    label: "Description",
+    align: "left",
+  },
+  {
+    id: "updatedAt",
+    label: "Date",
+    align: "left",
   },
   {
     id: "action",
@@ -51,6 +87,8 @@ const Product = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -61,27 +99,51 @@ const Product = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [refresh, setRefresh] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [ProductUpdate, setProductUpdate] = useState([]);
+
+  // const handleSubmit = async (e) => {
+  //   console.log("Hi");
+  //   e.preventDefault();
+  //   setLoading(true);
+
+  //   const response = await createProduct(inputs);
+
+  //   if (response.success) {
+  //     setRefresh(!refresh);
+  //     console.log('llll',response);
+  //     response?.formData?.message &&
+  //       popAlert("Success!", response?.formData?.message, "success").then((res) => {
+  //         setShowPopup(false);
+  //       });
+  //   } else {
+  //     response?.formData?.message &&
+  //       popAlert("Error!", response?.formData?.message, "error");
+  //     response?.formData?.formData && setErrors(response.formData.formData);
+  //   }
+  //   setLoading(false);
+  // };
 
   const handleSubmit = async (e) => {
-    console.log("Hi");
-    e.preventDefault();
-    setLoading(true);
+  console.log("Hi");
+  e.preventDefault();
+  setLoading(true);
 
-    const response = await createProduct(inputs);
+  const response = await createProduct(inputs);
 
-    if (response.success) {
-      setRefresh(!refresh);
-      response?.data?.message &&
-        popAlert("Success!", response?.data?.message, "success").then((res) => {
-          setShowPopup(false);
-        });
-    } else {
-      response?.data?.message &&
-        popAlert("Error!", response?.data?.message, "error");
-      response?.data?.data && setErrors(response.data.data);
-    }
-    setLoading(false);
-  };
+  if (response.success) {
+    setRefresh(!refresh);
+    response?.data?.message &&
+      popAlert("Success!", response?.data?.message, "success").then((res) => {
+        setShowPopup(false);
+      });
+  } else {
+    response?.data?.message &&
+      popAlert("Error!", response?.data?.message, "error");
+    response?.data?.data && setErrors(response.data.data);
+  }
+  setLoading(false);
+};
+
 
   const handleMapInput = (input) => {
     setInputs(input);
@@ -92,7 +154,7 @@ const Product = () => {
   };
 
   const handleView = (id) => {
-    navigate(`/pharmacy/${id}`);
+    navigate(`/products/${id}`);
   };
 
   const handlePageChange = (page) => {
@@ -104,55 +166,86 @@ const Product = () => {
   };
 
   const handlePopupClose = () => setShowPopup(false);
+  const handleUpdatePopupClose = () => setShowUpdatePopup(false);
+  const handleDeletePopupClose = () => setShowDeletePopup(false);
 
   const handleSearch = (input) => {
     setKeyword(input);
   };
 
-  // useEffect(() => {
-  //   let unmounted = false;
+  useEffect(() => {
+    let unmounted = false;
 
-  //   if (!unmounted) setIsLoading(true);
+    if (!unmounted) setIsLoading(true);
 
-  //   const fetchAndSet = async () => {
-  //     const response = await getallPharmacies(
-  //       pagination.page,
-  //       pagination.limit,
-  //       pagination.orderBy,
-  //       keyword
-  //     );
+    const fetchAndSet = async () => {
+      const response = await getPaginatedProducts(
+        pagination.page,
+        pagination.limit,
+        pagination.orderBy,
+      );
 
-  //     if (response.success) {
-  //       if (!response.data) return;
+      if (response.success) {
+        if (!response.data) return;
 
-  //       let tableDataArr = [];
-  //       for (const addPharmacy of response.data.content) {
-  //         tableDataArr.push({
-  //           name: addPharmacy.name,
-  //           registrationNumber: addPharmacy.registrationNumber,
-  //           address: addPharmacy.address,
-  //           contactNumber: addPharmacy.contactNumber,
-  //           action: <TableAction id={addPharmacy._id} onView={handleView} />,
-  //         });
-  //       }
+        let tableDataArr = [];
+        for (const addProduct of response.data.content) {
+          tableDataArr.push({
+            image:addProduct.firebaseStorageRef,
+            name: addProduct.name,
+            price: addProduct.price,
+            description:addProduct.description,
+            unit: addProduct.unit,
+            unitAmount:addProduct.unitAmount,
+            seller: addProduct.seller.name,
+            updatedAt:addProduct.updatedAt.substring(0, 10),
+            action: <TableAction id={addProduct._id} onEdit={handleView} />,
+          });
+        }
 
-  //       if (!unmounted) {
-  //         setTotalElements(response.data.totalElements);
-  //         setTableRows(tableDataArr);
-  //       }
-  //     } else {
-  //       console.error(response?.data);
-  //     }
-  //     if (!unmounted) setIsLoading(false);
-  //   };
+        if (!unmounted) {
+          setTotalElements(response.data.totalElements);
+          setTableRows(tableDataArr);
+        }
+      } else {
+        console.error(response?.data);
+      }
+      if (!unmounted) setIsLoading(false);
+    };
 
-  //   fetchAndSet();
+    fetchAndSet();
 
-  //   return () => {
-  //     unmounted = true;
-  //   };
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [pagination, refresh, keyword]);
+    return () => {
+      unmounted = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pagination, refresh, keyword]);
+
+  const handleEdit = (id, image_name, url, title, title_ar, enable) => {
+        setProductUpdate({
+            id: id,
+            image_name: image_name,
+            url: url,
+            title: title,
+            title_ar: title_ar,
+            is_enable: enable
+        });
+
+        setShowUpdatePopup(true);
+  };
+  
+  const handleDelet = (id, image_name, url, title, title_ar, enable) => {
+        setShowDeletePopup({
+            id: id,
+            image_name: image_name,
+            url: url,
+            title: title,
+            title_ar: title_ar,
+            is_enable: enable
+        });
+
+        setShowDeletePopup(true);
+    };
 
   return (
     <React.Fragment>
@@ -170,7 +263,7 @@ const Product = () => {
           <AddButton onClick={() => setShowPopup(true)} />
         </Grid>
         <Grid item xs={1}>
-          {/* <ReportButton /> */}
+          <ReportButton />
         </Grid>
       </Grid>
 
@@ -196,7 +289,7 @@ const Product = () => {
             mt: "3%",
           }}
         >
-          <ReusableTable
+          {/* <ReusableTable
             rows={tableRows}
             columns={tableColumns}
             totalElements={totalElements}
@@ -204,7 +297,111 @@ const Product = () => {
             page={pagination.page}
             onPageChange={handlePageChange}
             onLimitChange={handleLimitChange}
-          />
+          /> */}
+            <Card sx={{ justifyContent: 'center', mt: 3 }}>
+                                       <>
+                                                        <Paper sx={{ width: '100%', overflowx: 'scroll', overflowY: 'hidden' }}>
+                                <TableContainer sx={{ maxHeight: 440 }}>
+                                    <Table stickyHeader aria-label="sticky table">
+                                        <TableHead
+                                            sx={{
+                                                boxShadow: '0px 8px 25px rgba(0, 0, 0, 0.25)'
+                                            }}
+                                        >
+                                            <TableRow>
+                                                <TableCell style={{ minWidth: 50 ,textAlign:'center',fontWeight: 'bold'}}>Image</TableCell>
+                                                <TableCell style={{ minWidth: 50 ,fontWeight: 'bold'}}>NAME</TableCell>
+                                                <TableCell style={{ minWidth: 50 ,textAlign:'center',fontWeight: 'bold'}}>UoM</TableCell>
+                                                <TableCell style={{ minWidth: 50 ,textAlign:'center',fontWeight: 'bold'}}>UNITS</TableCell>
+                                                <TableCell style={{ minWidth: 50 ,textAlign:'center',fontWeight: 'bold'}}>PRICE</TableCell>
+                                                <TableCell style={{ minWidth: 50 ,fontWeight: 'bold'}}>SELLER</TableCell>
+                                                <TableCell style={{ minWidth: 50 ,fontWeight: 'bold'}}>DESCRIPTION</TableCell>
+                                                <TableCell style={{ minWidth: 50 ,fontWeight: 'bold'}}>DATE</TableCell>
+                                                <TableCell style={{ minWidth: 20, textAlign: 'center', fontWeight: 'bold' }}>ACTION</TableCell>
+                                                <TableCell style={{ minWidth: 20 ,textAlign:'center',fontWeight: 'bold'}}></TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                  {tableRows.map((response) => (
+                                        <TableRow sx={{ color: 'black' }}>
+                                                    <img
+                                                      style={{ maxWidth: '250px', maxHeight: '150px', objectFit: 'cover' }}
+                                                      src={'./image/88.png'}
+                                                      loading="lazy"
+                                                      alt="image"
+                                                    />
+
+                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 100 }}>
+                                                        {response.name}
+                                                    </TableCell>
+                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 50 }}>
+                                                        {response.unit}
+                                                    </TableCell>
+
+                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 50 }}>
+                                                        {response.unitAmount}
+                                                    </TableCell>
+                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 50 }}>
+                                                        {response.price} 
+                                                    </TableCell>
+                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 100 }}>
+                                                        {response.seller}
+                                                     </TableCell>
+                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 100 }}>
+                                                        {response.description}
+                                                    </TableCell>
+                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 100 }}>
+                                                        {response.updatedAt}
+                                                    </TableCell>
+                                                    <TableCell sx={{ color: 'black', minWidth: 50, alignItems: 'center' }}>
+                                                         <TableAction
+                                                            id={response.id}
+                                                            onEdit={() =>
+                                                                handleEdit(
+                                                                  response.id,
+                                                                  response.name,
+                                                                  response.unit,
+                                                                  response.unitAmount,
+                                                                  response.price,
+                                                                  response.seller,
+                                                                  response.description,
+                                                                )
+                                                            }
+                                                        /> 
+                                      </TableCell>
+                                      <TableCell sx={{ color: 'black', minWidth: 50, alignItems: 'center' }}>
+                                                         <TableAction
+                                                            id={response.id}
+                                                            onDelete={() =>
+                                                                handleDelet(
+                                                                  response.id,
+                                                                  response.name,
+                                                                  response.unit,
+                                                                  response.unitAmount,
+                                                                  response.price,
+                                                                  response.seller,
+                                                                  response.description,
+                                                                )
+                                                            }
+                                                        /> 
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                  </Table>
+                                  <TablePagination
+                                      rowsPerPageOptions={[10, 25, 50]}
+                                      component="div"
+                                      count={totalElements}
+                                      rowsPerPage={pagination.limit}
+                                      page={pagination.page}
+                                      onPageChange={handlePageChange}
+                                      onRowsPerPageChange={handleLimitChange}
+                                    />
+                                </TableContainer>
+                            </Paper>
+                        </>
+            </Card>
         </Box>
       )}
 
@@ -357,6 +554,68 @@ const Product = () => {
           </form>
         </Box>
       </Popup>
+
+      {/* custom popup */}
+            <Popup title='Update Products' width={800} show={showUpdatePopup} onClose={handleUpdatePopupClose}>
+                <Box sx={{ mb: 1 }}>
+                    <Box sx={{ mt: 2 }}>
+                        {loading ? (
+                            <Box
+                                sx={{
+                                    width: '100%',
+                                    mt: '3%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <CircularProgress sx={{ mr: 5 }} />
+                                <Typography sx={{ mb: 2 }} variant="h3">
+                                    LOADING
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <ProductCard
+                            //     id={offerUpdate.id}
+                            //     title={offerUpdate.title}
+                            //     title_ar={offerUpdate.title_ar}
+                            //     url={offerUpdate.url}
+                            //     handleSubmit={handleUpdateSubmit}
+                            //     enable={offerUpdate.is_enable}
+                            //     image={offerUpdate.image_name}
+                            />
+                        )}
+                    </Box>
+                </Box>
+            </Popup>
+
+      {/* custom popup */}
+      <Popup width={700} show={showDeletePopup} onClose={handleDeletePopupClose}>
+                <Box sx={{ mb: 1 }}>
+                    <Box sx={{ mt: 2 }}>
+                        {loading ? (
+                            <Box
+                                sx={{
+                                    width: '100%',
+                                    mt: '3%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <CircularProgress sx={{ mr: 5 }} />
+                                <Typography sx={{ mb: 2 }} variant="h3">
+                                    LOADING
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <ProductDelete />
+                        )}
+                    </Box>
+                </Box>
+            </Popup>
+
+      
     </React.Fragment>
   );
 };
