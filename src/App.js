@@ -14,6 +14,7 @@ import SignUp from "./views/SignUp";
 import User from "./views/User";
 import { useSelector } from "react-redux";
 import PageNotFound from "./views/PageNotFound";
+import Orders from "./views/Orders";
 // import MapGoogal from "./views/MapGoogal";
 
 const App = () => {
@@ -42,6 +43,7 @@ const App = () => {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/products" element={<Product />} />
                   <Route path="/users" element={<User />} />
+                   <Route path="/orders" element={<Orders />} />
                   <Route path="*" element={<PageNotFound />} />
                 </Routes>
               </BrowserRouter>
