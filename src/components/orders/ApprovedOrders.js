@@ -97,7 +97,7 @@ const ApprovedOrder = ({ order, onDataUpdate }) => {
               <img
                 style={{ width: "100%", objectFit: "contain", borderRadius: 8 }}
                 src={order?.prescriptionSheet}
-                alt="prescription sheet"
+                alt="product image"
               />
             </Grid>
             <Grid item xs={12}>

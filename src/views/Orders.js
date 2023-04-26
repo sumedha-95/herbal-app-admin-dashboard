@@ -24,37 +24,37 @@ const Pharamcies = [
 
 const tableColumns = [
   
-  {
-  id: 'image',
-  label: 'Image',
-  minWidth: 100,
-  align: 'center',
-  format: (value) => <img src={value} alt="Product" style={{ width: '100%' }} />,
-  },
+  // {
+  // id: 'image',
+  // label: 'Image',
+  // minWidth: 100,
+  // align: 'center',
+  // format: (value) => <img src={value} alt="Product" style={{ width: '100%' }} />,
+  // },
   {
     id: "id",
     label: "Order ID",
-    align: "center",
+    align: "left",
   },
   {
     id: "user",
     label: "User ID",
-    align: "center",
+    align: "left",
   },
   {
     id: "status",
     label: "Status",
-    align: "right",
+    align: "left",
   }, 
   {
     id: "total",
     label: "Total",
-    align: "right",
+    align: "left",
   },
   {
     id: "action",
     label: "Action",
-    align: "right",
+    align: "left",
   },
 ];
 
