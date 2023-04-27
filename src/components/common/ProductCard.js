@@ -18,7 +18,7 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary
 }));
 
-const ProductCard = ({ id, title, title_ar, url, image, enable, handleSubmit }) => {
+const ProductCard = ({ id, name, description, price, unit, unitAmount, handleSubmit }) => {
     const theme = useTheme();
     const [inputs, setInputs] = useState([]);
     const [errors, setErrors] = useState([]);
@@ -26,12 +26,12 @@ const ProductCard = ({ id, title, title_ar, url, image, enable, handleSubmit }) 
 
     useEffect(() => {
         setInputs({
-            id: id,
-            title: title,
-            title_ar: title_ar,
-            url: url,
-            image: image,
-            enable: enable
+            id:id,
+            name: name,
+            description: description,
+            price: price,
+            unit: unit,
+            unitAmount: unitAmount,
         });
     }, []);
 
@@ -47,7 +47,7 @@ const ProductCard = ({ id, title, title_ar, url, image, enable, handleSubmit }) 
                                     <Grid item xs={6}>
                                       
                                             <Typography variant="h7" sx={{ textAlign: 'left' }}>
-                                                ENGLISH TITLE
+                                                Product Name
                                             </Typography>
                                        
                                     </Grid>
@@ -55,19 +55,17 @@ const ProductCard = ({ id, title, title_ar, url, image, enable, handleSubmit }) 
                                   
                                             {' '}
                                             <TextField
-                                                error={errors['title'] ? true : false}
+                                                error={errors['name'] ? true : false}
                                                 required
-                                                name="title"
+                                                name="name"
                                                 variant="filled"
-                                                label='ENGLISH TITLE'
-                                                defaultValue={title}
+                                                label='Product Name'
+                                                defaultValue={name}
                                                 fullWidth
-                                                // multiline
-                                                // rows={4}
                                                 onChange={(e) => {
                                                     setInputs({
                                                         ...inputs,
-                                                        title: e.target.value
+                                                        name: e.target.value
                                                     });
                                                 }}
                                             />
@@ -77,7 +75,7 @@ const ProductCard = ({ id, title, title_ar, url, image, enable, handleSubmit }) 
                                     <Grid item xs={6}>
                                        
                                             <Typography variant="h7" sx={{ textAlign: 'left' }}>
-                                                ARABIC TITLE
+                                                Product Description
                                             </Typography>
                                         
                                     </Grid>
@@ -85,19 +83,19 @@ const ProductCard = ({ id, title, title_ar, url, image, enable, handleSubmit }) 
                                         
                                             {' '}
                                             <TextField
-                                                error={errors['title_ar'] ? true : false}
+                                                error={errors['description'] ? true : false}
                                                 required
-                                                name="title_ar"
+                                                name="description"
                                                 variant="filled"
-                                                label='ARABIC TITLE'
+                                                label='Product Description'
                                                 // multiline
                                                 // rows={4}
-                                                defaultValue={title_ar}
+                                                defaultValue={description}
                                                 fullWidth
                                                 onChange={(e) => {
                                                     setInputs({
                                                         ...inputs,
-                                                        title_ar: e.target.value
+                                                        description: e.target.value
                                                     });
                                                 }}
                                             />
@@ -106,7 +104,7 @@ const ProductCard = ({ id, title, title_ar, url, image, enable, handleSubmit }) 
                                     <Grid item xs={6}>
                                       
                                             <Typography variant="h7" sx={{ textAlign: 'left' }}>
-                                                URL
+                                                Price
                                             </Typography>
                                       
                                     </Grid>
@@ -114,19 +112,19 @@ const ProductCard = ({ id, title, title_ar, url, image, enable, handleSubmit }) 
                                         
                                             {' '}
                                             <TextField
-                                                error={errors['url'] ? true : false}
+                                                error={errors['price'] ? true : false}
                                                 required
-                                                name="url"
+                                                name="price"
                                                 variant="filled"
-                                                label='URL'
+                                                label='price'
                                                 // multiline
                                                 // rows={4}
-                                                defaultValue={url}
+                                                defaultValue={price}
                                                 fullWidth
                                                 onChange={(e) => {
                                                     setInputs({
                                                         ...inputs,
-                                                        url: e.target.value
+                                                        price: e.target.value
                                                     });
                                                 }}
                                             />
@@ -135,70 +133,61 @@ const ProductCard = ({ id, title, title_ar, url, image, enable, handleSubmit }) 
                                     <Grid item xs={6}>
                                      
                                             <Typography variant="h7" sx={{ textAlign: 'left' }}>
-                                                ENABLE/DISABLE STATUS
+                                                Units
                                             </Typography>
                                         
                                     </Grid>
-                                    <Grid item xs={6}>
+                                     <Grid item xs={6}>
                                         
-                                            <Typography variant="h7" sx={{ textAlign: 'left' }}>
-                                                <Switch
-                                                    sx={{ m: 1 }}
-                                                    defaultChecked={enable}
-                                                    onChange={(e) => {
-                                                        setInputs({
-                                                            ...inputs,
-                                                            enable: e.target.checked
-                                                        });
-                                                    }}
-                                                />
-                                            </Typography>
-                                        
-                                    </Grid>
-                                    <Grid item xs={6}>
-                                     
-                                            <Typography variant="h7" sx={{ textAlign: 'left' }}>
-                                                BANNER
-                                            </Typography>
-                                        
-                                    </Grid>
-                                    <Grid item xs={6}>
-                                        
-                                            <Typography variant="h7" sx={{ textAlign: 'left' }}>
-                                                <img
-                                                    style={{ maxWidth: '150px', maxHeight: '150px', objectFit: 'cover' }}
-                                                    src={inputs.image}
-                                                    loading="lazy"
-                                                    alt='BANNER'
-                                                />
-                                            </Typography>
-                                        
-                                            <input
-                                                type="file"
-                                                name="image"
-                                                id="image"
-                                                accept="image/png, image/gif, image/jpeg"
+                                            {' '}
+                                            <TextField
+                                                error={errors['unit'] ? true : false}
+                                                required
+                                                name="unit"
+                                                variant="filled"
+                                                label='unit'
+                                                // multiline
+                                                // rows={4}
+                                                defaultValue={unit}
+                                                fullWidth
                                                 onChange={(e) => {
-                                                    // setImage(window.URL.createObjectURL(e.target.files[0]));
-                                                    if (e.target.files[0].size < 15000000) {
-                                                        setInputs({
-                                                            ...inputs,
-                                                            file: e.target.files[0],
-                                                            image: window.URL.createObjectURL(e.target.files[0])
-                                                        });
-                                                    } else {
-                                                        console.log('errors');
-                                                    }
+                                                    setInputs({
+                                                        ...inputs,
+                                                        unit: e.target.value
+                                                    });
                                                 }}
                                             />
-                                            <Typography variant="h7" sx={{ display: 'flex', justifyContent: 'flex-start', color: 'red' }}>
-                                                The maximum allowable size for file uploads is 2MB and the dimensions must not exceed 320 x
-                                                240 pixels.
-                                            </Typography>                                       
+                                       
+                                    </Grid>
+                                     <Grid item xs={6}>
+                                            <Typography variant="h7" sx={{ textAlign: 'left' }}>
+                                                Unit Amount
+                                            </Typography>
+                                        
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                         <TextField
+                                                error={errors['unitAmount'] ? true : false}
+                                                required
+                                                name="unitAmount"
+                                                variant="filled"
+                                                label='unitAmount'
+                                                // multiline
+                                                // rows={4}
+                                                defaultValue={unitAmount}
+                                                fullWidth
+                                                onChange={(e) => {
+                                                    setInputs({
+                                                        ...inputs,
+                                                        unitAmount: e.target.value
+                                                    });
+                                                }}
+                                            />
+                                                                               
                                     </Grid>
                                 </Grid>
                             </Box>
-                            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                            <Box sx={{ mt:5, display: 'flex', justifyContent: 'flex-end' }}>
                                 <Button type="reset" variant="contained" sx={{ py: 1, px: 5, mr: 2, ml: 2 }}>
                                     CLEAR
                                 </Button>

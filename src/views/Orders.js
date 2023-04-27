@@ -14,9 +14,10 @@ import Popup from "../components/common/Popup";
 import ReusableTable from "../components/common/ReusableTable";
 import { getOrdersByPharmacy, getOrdersByProducts } from "../service/order.service";
 import TableAction from "../components/common/TableActions";
-import UnApprovedOrder from "../components/orders/UnApprovedOrder";
+
 import ApprovedOrder from "../components/orders/ApprovedOrders"
 import OrderReport from "../components/orders/OrderReport";
+import UnApprovedOrder from "../components/orders/UnApprovedOrder";
 
 const Pharamcies = [
   { label: "Samarasingha Pharamcy", _id: "6312055d361e1bab6496fd32" },
@@ -24,37 +25,37 @@ const Pharamcies = [
 
 const tableColumns = [
   
-  {
-  id: 'image',
-  label: 'Image',
-  minWidth: 100,
-  align: 'center',
-  format: (value) => <img src={value} alt="Product" style={{ width: '100%' }} />,
-  },
+  // {
+  // id: 'image',
+  // label: 'Image',
+  // minWidth: 100,
+  // align: 'center',
+  // format: (value) => <img src={value} alt="Product" style={{ width: '100%' }} />,
+  // },
   {
     id: "id",
     label: "Order ID",
-    align: "center",
+    align: "left",
   },
   {
     id: "user",
     label: "User ID",
-    align: "center",
+    align: "left",
   },
   {
     id: "status",
     label: "Status",
-    align: "right",
+    align: "left",
   }, 
   {
     id: "total",
     label: "Total",
-    align: "right",
+    align: "left",
   },
   {
     id: "action",
     label: "Action",
-    align: "right",
+    align: "left",
   },
 ];
 
@@ -86,6 +87,7 @@ const Orders = () => {
 
   const handleView = (id) => {
     setSelectedOrderId(id);
+    console.log('kooooo',id);
     setShowPopup(true);
   };
 
@@ -107,10 +109,11 @@ const Orders = () => {
   };
 
   const selectedOrder = useMemo(
+  
     () => orders.find((order) => order._id === selectedOrderId),
     [selectedOrderId, orders]
   );
-
+console.log("selectedOrder",selectedOrder);
   useEffect(() => {
     let unmounted = false;
 
@@ -208,21 +211,25 @@ const Orders = () => {
       {/* custom popup */}
       <Popup
         title={
-          selectedOrder?.status === "pending"
-            ? `Order Approval - ${selectedOrder?._id}`
+          selectedOrder?.status === "paid"
+            ? `Paid Order - ${selectedOrder?._id}`
+            : selectedOrder?.status === "pending"
+              ? `Pending Order - ${selectedOrder._id}`
+              : selectedOrder?.status === "confirmed"
+              ? `Confirmed Order - ${selectedOrder._id}`
             : selectedOrder?._id
         }
         width={"95vw"}
         show={showPopup}
         onClose={handlePopupClose}
       >
-        {selectedOrder?.status === "pending" ? (
-          <UnApprovedOrder
+        {selectedOrder?.status === "paid" ? (
+          <ApprovedOrder
             order={selectedOrder}
             onDataUpdate={handleDataUpdate}
           />
         ) : (
-          <ApprovedOrder
+        <UnApprovedOrder
             order={selectedOrder}
             onDataUpdate={handleDataUpdate}
           />

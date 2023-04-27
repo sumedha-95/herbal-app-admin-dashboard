@@ -94,11 +94,11 @@ const ApprovedOrder = ({ order, onDataUpdate }) => {
         <Grid item xs={12} lg={7}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
-              <img
+              {/* <img
                 style={{ width: "100%", objectFit: "contain", borderRadius: 8 }}
                 src={order?.prescriptionSheet}
-                alt="prescription sheet"
-              />
+                alt="product image"
+              /> */}
             </Grid>
             <Grid item xs={12}>
               <Typography variant="h7" fontWeight={"bold"} sx={{ mb: 1 }}>
@@ -159,7 +159,7 @@ const ApprovedOrder = ({ order, onDataUpdate }) => {
                 <Typography>Address - {order?.shipping?.address}</Typography>
               </Box>
             </Grid>
-            {order.status === "confirmed" && (
+            {order.status === "paid" &&  (
               <Grid item xs={12}>
                 <Button
                   variant="contained"
@@ -173,7 +173,7 @@ const ApprovedOrder = ({ order, onDataUpdate }) => {
                   }}
                   disabled={isSaving}
                 >
-                  Complete Order
+                  Confirmed Order
                   {isSaving && (
                     <>
                       &nbsp;&nbsp;
