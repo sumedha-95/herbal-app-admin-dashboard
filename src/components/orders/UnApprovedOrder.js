@@ -1,20 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import {
-  Grid,
-  Autocomplete,
-  TextField,
-  CircularProgress,
-  Button,
-  Typography,
-} from "@mui/material";
-import { getGlobalMedicines } from "../../service/globalMedicines.service";
+import React, { useState, useEffect } from "react";
+import { Button, CircularProgress, Grid, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import ReusableTable from "../common/ReusableTable";
-import TableAction from "../common/TableActions";
+import { completeOrder, rejectOrder } from "../../service/order.service";
 import { popAlert } from "../../utils/alerts";
-import { getMedinceByGID } from "../../service/medicine.service";
-import colors from "../../assets/styles/colors";
-import { approveOrder } from "../../service/order.service";
 
 const tableColumns = [
   {
@@ -32,331 +21,192 @@ const tableColumns = [
     align: "right",
   },
   {
-    id: "availability",
-    label: "Availability",
-    align: "right",
-    format: (value) => (value ? "Yes" : "No"),
-  },
-  {
-    id: "action",
-    label: "Action",
+    id: "subTotal",
+    label: "SubTotal",
     align: "right",
   },
 ];
 
-let inputModel = {
-  medicine: { id: "", name: "" },
-  quantity: 0,
+const boxStyles = {
+  borderRadius: 5,
+  boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.25)",
+  p: 3,
 };
 
-const UnApprovedOrder = ({ order, onDataUpdate }) => {
-  const timeoutRef = useRef(null);
-  const tRowRef = useRef([]);
-
-  const [isSelectDataLoading, setIsSelectDataLoading] = useState(false);
-  const [globalMedicines, setGlobalMedicines] = useState([]);
-  const [keyword, setKeyword] = useState("");
-  const [inputs, setInputs] = useState(inputModel);
-  const [open, setOpen] = useState(false);
+const UnApprovedOrder = ({ order, onDataUpdate  }) => {
   const [tableRows, setTableRows] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleApproval = async () => {
-    setLoading(true);
-    const preparedArr = [];
-
-    for (const row of tableRows) {
-      preparedArr.push({
-        globalMedicine: {
-          _id: row.id,
-        },
-        quantity: parseInt(row.quantity),
-        name: row.name,
-        availability: row.availability,
-      });
-    }
-
-    // api call
-    const response = await approveOrder(order._id, { medicines: preparedArr });
+  const handleCompleteOrder = async (orderId) => {
+    setIsSaving(true);
+    const response = await completeOrder(orderId);
+    setIsSaving(false);
 
     if (response.success) {
-      response?.data?.message &&
-        popAlert("Success!", response?.data?.message, "success").then((res) => {
-          onDataUpdate();
-        });
+      popAlert("Success!", response?.data?.message, "success");
+      onDataUpdate();
     } else {
       response?.data?.message &&
         popAlert("Error!", response?.data?.message, "error");
     }
-
-    setLoading(false);
   };
 
-  const handleClear = () => {
-    setTableRows([]);
-    tRowRef.current = [];
-  };
-
-  const handleDelete = (id) => {
-    const filteredRes = tRowRef.current.filter((medi) => medi.id !== id);
-    tRowRef.current = filteredRes;
-    setTableRows(filteredRes);
-  };
-
-  const handleClick = async () => {
-    let availability = true;
-
-    if (!inputs.medicine.id)
-      return popAlert("Error!", "Please select the medicine first!", "error");
-
-    if (!inputs.quantity)
-      return popAlert("Error!", "Please select the quantity first!", "error");
-
-    setLoading(true);
-
-    // validate stock level
-    const response = await getMedinceByGID(
-      inputs.medicine.id,
-      order.pharmacy._id
-    );
+  const handleRejectOrder = async (orderId) => {
+    setIsSaving(true);
+    const response = await rejectOrder(orderId);
+    setIsSaving(false);
 
     if (response.success) {
-      const rMedicine = response.data;
-      if (rMedicine.stockLevel < inputs.quantity) {
-        availability = false;
-      }
+      popAlert("Success!", response?.data?.message, "success");
+      onDataUpdate();
     } else {
-      if (response?.data?.message) {
-        // refactor this later using a proper backend api
-        if (response.data.message === "Medicine not found!") {
-          availability = false;
-        } else {
-          popAlert("Error!", response.data.message, "error");
-        }
-      }
+      response?.data?.message &&
+        popAlert("Error!", response?.data?.message, "error");
     }
-
-    const isExists = tRowRef.current.find(
-      (medi) => medi.id === inputs.medicine.id
-    );
-    if (isExists) {
-      setLoading(false);
-      return popAlert(
-        "Error!",
-        "You cannot add the same medicine twice!",
-        "error"
-      );
-    }
-
-    const tr = [
-      {
-        id: inputs.medicine.id,
-        name: inputs.medicine.name,
-        quantity: inputs.quantity,
-        availability: availability,
-        action: <TableAction id={inputs.medicine.id} onDelete={handleDelete} />,
-      },
-    ].concat(tableRows);
-
-    setTableRows(tr);
-    tRowRef.current = tr;
-    setInputs(inputModel);
-    setLoading(false);
   };
-
-  const memoizedLabel = useMemo(
-    () =>
-      globalMedicines.find((medi) => medi.id === inputs.medicine.id)?.label ||
-      "",
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [inputs.medicine.id]
-  );
-
-  const throttle = (func, time) => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(func, time);
-  };
-
-  //select medicine
-  useEffect(() => {
-    let unmounted = false;
-
-    if (!unmounted && open) setIsSelectDataLoading(true);
-
-    const fetchAndSet = async () => {
-      const response = await getGlobalMedicines(1, 20, "desc", keyword);
-
-      if (response.success) {
-        if (!response.data) return;
-
-        let gMedicineArr = [];
-
-        for (const gMedicine of response.data.content) {
-          gMedicineArr.push({ label: gMedicine.name, id: gMedicine._id });
-        }
-
-        if (!unmounted) {
-          setGlobalMedicines(gMedicineArr);
-        }
-      } else {
-        console.error(response?.data);
-      }
-      if (!unmounted) setIsSelectDataLoading(false);
-    };
-
-    if (open) throttle(() => fetchAndSet(), 500);
-
-    return () => {
-      unmounted = true;
-    };
-  }, [keyword, open]);
 
   useEffect(() => {
     let unmounted = false;
 
-    if (!open && !unmounted) {
-      setGlobalMedicines([]);
+    if (order?.items) {
+      console.log('oooo',order);
+      let preparedArr = [];
+      for (const items of order.items) {
+          preparedArr.push({
+            id: items.product._id,
+            name: items.product.name,
+            quantity: items.quantity,
+            subTotal: items.total,
+          });
+        
+      }
+      if (!unmounted) setTableRows(preparedArr);
     }
 
     return () => {
       unmounted = true;
     };
-  }, [open]);
+  }, [order]);
 
   return (
     <React.Fragment>
       <Grid container spacing={2} sx={{ mt: 1 }}>
-        <Grid item xs={12} lg={5}>
-          <img
-            style={{ width: "100%", objectFit: "contain", borderRadius: 8 }}
-            src={order?.prescriptionSheet}
-            alt="product image"
-          />
-        </Grid>
         <Grid item xs={12} lg={7}>
-          <Grid container spacing={1}>
-            <Grid item xs={12} sx={{ mb: 1 }}>
-              <Typography variant="h5" fontWeight={"bold"}>
-                {/* Record Medicines */}
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              {/* <img
+                style={{ width: "100%", objectFit: "contain", borderRadius: 8 }}
+                src={order?.prescriptionSheet}
+                alt="product image"
+              /> */}
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h7" fontWeight={"bold"} sx={{ mb: 1 }}>
+               Products
               </Typography>
-              <Typography>
-                {/* Enter the medicine name and select the most relavent medicine
-                from the results and click on the add button. */}
-              </Typography>
+              <ReusableTable rows={tableRows} columns={tableColumns} />
             </Grid>
-            <Grid item xs={5}>
-              <Box>
-                <Autocomplete
-                  id="combo-box-demo"
-                  fullWidth
-                  onOpen={() => {
-                    setOpen(true);
-                  }}
-                  onClose={() => {
-                    setOpen(false);
-                  }}
-                  isOptionEqualToValue={(option, value) =>
-                    option.name === value.name
-                  }
-                  value={memoizedLabel}
-                  onChange={(event, value) => {
-                    if (value?.id) {
-                      setInputs({
-                        ...inputs,
-                        medicine: { name: value.label, id: value.id },
-                      });
-                    } else {
-                      setInputs({
-                        ...inputs,
-                        medicine: { name: "", id: "" },
-                      });
-                    }
-                  }}
-                  options={globalMedicines}
-                  loading={isSelectDataLoading}
-                  onInputChange={(event, inputValue) => {
-                    setKeyword(inputValue);
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Select Medicine"
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <React.Fragment>
-                            {isSelectDataLoading ? (
-                              <CircularProgress color="inherit" size={20} />
-                            ) : null}
-                            {params.InputProps.endAdornment}
-                          </React.Fragment>
-                        ),
-                      }}
-                    />
-                  )}
-                />
-              </Box>
-            </Grid>
-            <Grid item xs={4}>
-              <Box>
-                <TextField
-                  name="quantity"
-                  variant="outlined"
-                  label="Quantity"
-                  type="number"
-                  fullWidth
-                  InputProps={{ inputProps: { min: 0 }, shrink: "true" }}
-                  value={inputs.quantity}
-                  onChange={(e) =>
-                    setInputs({
-                      ...inputs,
-                      quantity: e.target.value,
-                    })
-                  }
-                />
-              </Box>
-            </Grid>
-            <Grid item xs={3}>
-              <Box>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  sx={{ py: 2, px: 5 }}
-                  onClick={handleClick}
-                  fullWidth
-                  disabled={loading}
-                >
-                  {loading ? <CircularProgress color="secondary" /> : "Add"}
-                </Button>
+          </Grid>
+        </Grid>
+        <Grid item xs={12} lg={5}>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Box sx={{ ...boxStyles }}>
+                <Typography variant="h6" fontWeight={"bold"}>
+                  Order Status
+                </Typography>
+                {order?.status}
               </Box>
             </Grid>
             <Grid item xs={12}>
-              {tableRows && tableRows.length > 0 && (
-                <ReusableTable rows={tableRows} columns={tableColumns} />
-              )}
-            </Grid>
-          </Grid>
-          <Grid item xs={12} sx={{ mt: 2 }}>
-            {tableRows && tableRows.length > 0 && (
-              <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
-                <Button
-                  type="reset"
-                  variant="contained"
-                  onClick={handleClear}
-                  sx={{ py: 2, px: 5, mr: 2, backgroundColor: colors.grey }}
-                >
-                  Clear
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  sx={{ py: 2, px: 5 }}
-                  disabled={loading}
-                  onClick={handleApproval}
-                >
-                  {loading ? <CircularProgress color="secondary" /> : "Approve"}
-                </Button>
+              <Box sx={{ ...boxStyles }}>
+                <Typography variant="h6" fontWeight={"bold"}>
+                  Order Summary
+                </Typography>
+                <Typography>
+                  Created At - {new Date(order?.createdAt).toDateString()}
+                </Typography>
+                <Typography>
+                  Sub Total - Rs.{order?.subTotal}
+                </Typography>
+                <Typography>
+                  Shipping Charges - Rs.{order?.shippingCharge}
+                </Typography>
+                <Typography>
+                  Service Charges - Rs.{order?.serviceCharge}
+                </Typography>
+                <Typography>Total - Rs.{order?.total}</Typography>
               </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ ...boxStyles }}>
+                <Typography variant="h6" fontWeight={"bold"}>
+                  Customer Details
+                </Typography>
+                <Typography>Name - {order?.shipping?.name}</Typography>
+                <Typography>Address - {order?.shipping?.address}</Typography>
+                <Typography>Contact Number - {order?.shipping?.contactNumber}</Typography>
+                {/* <Typography>
+                  Contact - {order?.patient?.contactNumber}
+                </Typography> */}
+              </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ ...boxStyles }}>
+                <Typography variant="h6" fontWeight={"bold"}>
+                  Delivery Details
+                </Typography>
+                <Typography>Address - {order?.shipping?.address}</Typography>
+              </Box>
+            </Grid>
+            {order.status === "paid" &&  (
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  onClick={() => handleCompleteOrder(order._id)}
+                  sx={{
+                    height: 56,
+                    borderRadius: "8px",
+                    boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.25)",
+                  }}
+                  disabled={isSaving}
+                >
+                  Waiting for Approval
+                  {isSaving && (
+                    <>
+                      &nbsp;&nbsp;
+                      <CircularProgress size={"24px"} color={"Yellow"} />
+                    </>
+                  )}
+                </Button>
+              </Grid>
+            )}
+            {order.status === "pending" && (
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  onClick={() => handleRejectOrder(order._id)}
+                  sx={{
+                    height: 56,
+                    borderRadius: "8px",
+                    boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.25)",
+                  }}
+                  disabled={isSaving}
+                  color="error"
+                >
+                  Waiting for Payment
+                  {isSaving && (
+                    <>
+                      &nbsp;&nbsp;
+                      <CircularProgress size={"24px"} color={"secondary"} />
+                    </>
+                  )}
+                </Button>
+              </Grid>
             )}
           </Grid>
         </Grid>

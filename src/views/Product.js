@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import SearchBar from "../components/common/SearchBar";
 import AddButton from "../components/common/AddButton";
 // import ReportButton from "../components/common/ReportButton";
@@ -20,9 +20,8 @@ import {
 } from "@mui/material";
 import Popup from "../components/common/Popup";
 import ReusableTable from "../components/common/ReusableTable";
-import { createPharmacy, createProduct, getPaginatedProducts, getallPharmacies } from "../service/product.service";
-import PharmacyModel from "../models/products";
-import { popAlert } from "../utils/alerts";
+import { createPharmacy, createProduct, deleteProducts, findById, getPaginatedProducts, getSelfPaginatedProducts, getallPharmacies, updateProducts } from "../service/product.service";
+import { popAlert, popDangerPrompt } from "../utils/alerts";
 import colors from "../assets/styles/colors";
 import TableAction from "../components/common/TableActions";
 import { useNavigate } from "react-router-dom";
@@ -30,15 +29,14 @@ import Paper from "@mui/material/Paper";
 import ReportButton from "../components/common/ReportButton";
 import ProductCard from "../components/common/ProductCard";
 import ProductDelete from "../components/common/ProductDelete";
+import Products from "../models/products";
+import { useParams } from "react-router-dom";
+import EditButton from "../components/common/EditButton";
+import DeleteButton from "../components/common/DeleteButton";
+import { useSelector } from "react-redux";
 
 //table columns
-const tableColumns = [
-  {
-    id: "image",
-    label: "Image",
-    minWidth: 40,
-    align: "left",
-  },
+const tableColumns = [ 
   {
     id: "name",
     label: "Name",
@@ -82,8 +80,9 @@ const tableColumns = [
 ];
 
 const Product = () => {
+    const { id } = useParams();
   const navigate = useNavigate();
-  const [inputs, setInputs] = useState(PharmacyModel);
+  const [inputs, setInputs] = useState(Products);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -99,37 +98,16 @@ const Product = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [refresh, setRefresh] = useState(false);
   const [keyword, setKeyword] = useState("");
-  const [ProductUpdate, setProductUpdate] = useState([]);
-
-  // const handleSubmit = async (e) => {
-  //   console.log("Hi");
-  //   e.preventDefault();
-  //   setLoading(true);
-
-  //   const response = await createProduct(inputs);
-
-  //   if (response.success) {
-  //     setRefresh(!refresh);
-  //     console.log('llll',response);
-  //     response?.formData?.message &&
-  //       popAlert("Success!", response?.formData?.message, "success").then((res) => {
-  //         setShowPopup(false);
-  //       });
-  //   } else {
-  //     response?.formData?.message &&
-  //       popAlert("Error!", response?.formData?.message, "error");
-  //     response?.formData?.formData && setErrors(response.formData.formData);
-  //   }
-  //   setLoading(false);
-  // };
+  const [ProductsNew, setProducts] = useState([]);
+  const [selectedOrderId, setSelectedOrderId] = useState(false);
+  const [isSeller,setisSeller] = useState(false)
 
   const handleSubmit = async (e) => {
   console.log("Hi");
   e.preventDefault();
   setLoading(true);
 
-  const response = await createProduct(inputs);
-
+  const response = await createProduct(inputs);  
   if (response.success) {
     setRefresh(!refresh);
     response?.data?.message &&
@@ -173,6 +151,20 @@ const Product = () => {
     setKeyword(input);
   };
 
+  const authState = useSelector((state) => state.auth);
+
+    useEffect(() => {
+
+    if (authState.user.role == 'seller') {
+      setisSeller(true)
+    }
+    
+    if (!window.location.href.includes("auth") && !authState?.isLoggedIn)
+      window.location.replace("/auth/sign-in");
+  }, [authState.isLoggedIn]);
+
+   
+
   useEffect(() => {
     let unmounted = false;
 
@@ -189,23 +181,32 @@ const Product = () => {
         if (!response.data) return;
 
         let tableDataArr = [];
-        for (const addProduct of response.data.content) {
+        for (const product of response.data.content) {
+          console.log("product kkkkkkkkk",product);
           tableDataArr.push({
-            image:addProduct.firebaseStorageRef,
-            name: addProduct.name,
-            price: addProduct.price,
-            description:addProduct.description,
-            unit: addProduct.unit,
-            unitAmount:addProduct.unitAmount,
-            seller: addProduct.seller.name,
-            updatedAt:addProduct.updatedAt.substring(0, 10),
-            action: <TableAction id={addProduct._id} onEdit={handleView} />,
+          id: product._id,
+          // image: product.firebaseStorageRef,
+          name: product.name,
+          price: product.price,
+          description: product.description,
+          unit: product.unit,
+          unitAmount: product.unitAmount,
+          seller: product.seller?.name,
+          updatedAt: product.updatedAt?.substring(0, 10),
+          action: (
+              <TableAction
+                id={product._id}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ),
           });
         }
-
         if (!unmounted) {
           setTotalElements(response.data.totalElements);
           setTableRows(tableDataArr);
+          setProducts(response.data.content);
+         
         }
       } else {
         console.error(response?.data);
@@ -213,7 +214,9 @@ const Product = () => {
       if (!unmounted) setIsLoading(false);
     };
 
-    fetchAndSet();
+    if (!isSeller) {
+        fetchAndSet();
+    }
 
     return () => {
       unmounted = true;
@@ -221,19 +224,150 @@ const Product = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination, refresh, keyword]);
 
-  const handleEdit = (id, image_name, url, title, title_ar, enable) => {
-        setProductUpdate({
-            id: id,
-            image_name: image_name,
-            url: url,
-            title: title,
-            title_ar: title_ar,
-            is_enable: enable
-        });
+  useEffect(() => {
+    let unmounted = false;
 
-        setShowUpdatePopup(true);
+    if (!unmounted) setIsLoading(true);
+
+    const fetchAndSet = async () => {
+      const response = await getSelfPaginatedProducts(
+        pagination.page,
+        pagination.limit,
+        pagination.orderBy,
+      );
+
+      if (response.success) {
+        if (!response.data) return;
+
+        let tableDataArr = [];
+        for (const product of response.data.content) {
+          console.log("product kkkkkkkkk",product);
+          tableDataArr.push({
+          id: product._id,
+          // image: product.firebaseStorageRef,
+          name: product.name,
+          price: product.price,
+          description: product.description,
+          unit: product.unit,
+          unitAmount: product.unitAmount,
+          seller: product.seller?.name,
+          updatedAt: product.updatedAt?.substring(0, 10),
+          action: (
+              <TableAction
+                id={product._id}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ),
+          });
+        }
+        if (!unmounted) {
+          setTotalElements(response.data.totalElements);
+          setTableRows(tableDataArr);
+          setProducts(response.data.content);
+         
+        }
+      } else {
+        console.error(response?.data);
+      }
+      if (!unmounted) setIsLoading(false);
+    };
+
+    if (isSeller) {
+        fetchAndSet();
+    }
+
+    return () => {
+      unmounted = true;
+    };
+  }, [pagination, refresh, keyword]);
+
+  //delete products
+  const deleteProductshandleSubmit = async (id) => {
+    setIsLoading(true);
+
+    popDangerPrompt("DELETE", "Are You sure you want to delete this product!" ,"error").then( async (res) =>{
+      if (res.isConfirmed) {
+        
+      const response = await deleteProducts(id);
+    
+    if (response.success) {
+      response?.data?.message &&
+        popAlert("Success!", response?.data?.message, "success").then((res) => {
+            setShowPopup(true);
+            window.location.replace("/")
+        });
+    } else {
+      response?.data?.message &&
+        popAlert("Error!", response?.data?.message, "error");
+      response?.data?.data && setErrors(response.data.data);
+    }
+  }});
+  setIsLoading(false); 
+};
+
+  //update Product
+   const updateProductshandleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const response = await updateProducts(selectedOrderId, inputs);
+    console.log(inputs)
+    if (response.success) {
+      setRefresh(!refresh);
+      response?.data?.message &&
+        popAlert("Success!", response?.data?.message, "success").then((res) => {
+          setShowUpdatePopup(false);
+        });
+    } else {
+      response?.data?.message &&
+        popAlert("Error!", response?.data?.message, "error");
+      response?.data?.data && setErrors(response.data.data);
+    }
+    setIsLoading(false);
   };
-  
+
+
+   const handleUpdateClear = () => {
+    setInputs(updateProducts);
+  };
+
+  //product find by id
+  useEffect(() => {
+    let unmounted = false
+
+    const fetchAndSet = async () =>{
+      const response = await findById(selectedOrderId);
+      if (response.success) {
+      
+      if(!unmounted){
+        setProducts(response?.data);
+        setInputs(response?.data);
+      }
+    }
+  }
+
+  fetchAndSet();
+
+    return () => {
+      unmounted = true;
+    };
+  }, [selectedOrderId, refresh]);
+
+
+  const handleEdit = (id) => {
+    console.log('Product ID:', id);
+    setSelectedOrderId(id)
+    setShowUpdatePopup(true);
+    
+};
+
+  const handleDelete = (id) => {
+
+    console.log("handleDelete",id);
+    deleteProductshandleSubmit(id);
+  };
+
   const handleDelet = (id, image_name, url, title, title_ar, enable) => {
         setShowDeletePopup({
             id: id,
@@ -246,7 +380,9 @@ const Product = () => {
 
         setShowDeletePopup(true);
     };
-
+  console.log('tavb;e', tableRows);
+  console.log('hhhhh', showUpdatePopup);
+  console.log('ProductUpdateeeeeeeeeee',inputs);
   return (
     <React.Fragment>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
@@ -289,7 +425,7 @@ const Product = () => {
             mt: "3%",
           }}
         >
-          {/* <ReusableTable
+           <ReusableTable
             rows={tableRows}
             columns={tableColumns}
             totalElements={totalElements}
@@ -297,111 +433,7 @@ const Product = () => {
             page={pagination.page}
             onPageChange={handlePageChange}
             onLimitChange={handleLimitChange}
-          /> */}
-            <Card sx={{ justifyContent: 'center', mt: 3 }}>
-                                       <>
-                                                        <Paper sx={{ width: '100%', overflowx: 'scroll', overflowY: 'hidden' }}>
-                                <TableContainer sx={{ maxHeight: 440 }}>
-                                    <Table stickyHeader aria-label="sticky table">
-                                        <TableHead
-                                            sx={{
-                                                boxShadow: '0px 8px 25px rgba(0, 0, 0, 0.25)'
-                                            }}
-                                        >
-                                            <TableRow>
-                                                <TableCell style={{ minWidth: 50 ,textAlign:'center',fontWeight: 'bold'}}>Image</TableCell>
-                                                <TableCell style={{ minWidth: 50 ,fontWeight: 'bold'}}>NAME</TableCell>
-                                                <TableCell style={{ minWidth: 50 ,textAlign:'center',fontWeight: 'bold'}}>UoM</TableCell>
-                                                <TableCell style={{ minWidth: 50 ,textAlign:'center',fontWeight: 'bold'}}>UNITS</TableCell>
-                                                <TableCell style={{ minWidth: 50 ,textAlign:'center',fontWeight: 'bold'}}>PRICE</TableCell>
-                                                <TableCell style={{ minWidth: 50 ,fontWeight: 'bold'}}>SELLER</TableCell>
-                                                <TableCell style={{ minWidth: 50 ,fontWeight: 'bold'}}>DESCRIPTION</TableCell>
-                                                <TableCell style={{ minWidth: 50 ,fontWeight: 'bold'}}>DATE</TableCell>
-                                                <TableCell style={{ minWidth: 20, textAlign: 'center', fontWeight: 'bold' }}>ACTION</TableCell>
-                                                <TableCell style={{ minWidth: 20 ,textAlign:'center',fontWeight: 'bold'}}></TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                  {tableRows.map((response) => (
-                                        <TableRow sx={{ color: 'black' }}>
-                                                    <img
-                                                      style={{ maxWidth: '250px', maxHeight: '150px', objectFit: 'cover' }}
-                                                      src={'./image/88.png'}
-                                                      loading="lazy"
-                                                      alt="image"
-                                                    />
-
-                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 100 }}>
-                                                        {response.name}
-                                                    </TableCell>
-                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 50 }}>
-                                                        {response.unit}
-                                                    </TableCell>
-
-                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 50 }}>
-                                                        {response.unitAmount}
-                                                    </TableCell>
-                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 50 }}>
-                                                        {response.price} 
-                                                    </TableCell>
-                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 100 }}>
-                                                        {response.seller}
-                                                     </TableCell>
-                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 100 }}>
-                                                        {response.description}
-                                                    </TableCell>
-                                                    <TableCell sx={{ color: 'black' }} style={{ minWidth: 100 }}>
-                                                        {response.updatedAt}
-                                                    </TableCell>
-                                                    <TableCell sx={{ color: 'black', minWidth: 50, alignItems: 'center' }}>
-                                                         <TableAction
-                                                            id={response.id}
-                                                            onEdit={() =>
-                                                                handleEdit(
-                                                                  response.id,
-                                                                  response.name,
-                                                                  response.unit,
-                                                                  response.unitAmount,
-                                                                  response.price,
-                                                                  response.seller,
-                                                                  response.description,
-                                                                )
-                                                            }
-                                                        /> 
-                                      </TableCell>
-                                      <TableCell sx={{ color: 'black', minWidth: 50, alignItems: 'center' }}>
-                                                         <TableAction
-                                                            id={response.id}
-                                                            onDelete={() =>
-                                                                handleDelet(
-                                                                  response.id,
-                                                                  response.name,
-                                                                  response.unit,
-                                                                  response.unitAmount,
-                                                                  response.price,
-                                                                  response.seller,
-                                                                  response.description,
-                                                                )
-                                                            }
-                                                        /> 
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                  </Table>
-                                  <TablePagination
-                                      rowsPerPageOptions={[10, 25, 50]}
-                                      component="div"
-                                      count={totalElements}
-                                      rowsPerPage={pagination.limit}
-                                      page={pagination.page}
-                                      onPageChange={handlePageChange}
-                                      onRowsPerPageChange={handleLimitChange}
-                                    />
-                                </TableContainer>
-                            </Paper>
-                        </>
-            </Card>
+          /> 
         </Box>
       )}
 
@@ -554,41 +586,132 @@ const Product = () => {
           </form>
         </Box>
       </Popup>
-
+  
       {/* custom popup */}
             <Popup title='Update Products' width={800} show={showUpdatePopup} onClose={handleUpdatePopupClose}>
-                <Box sx={{ mb: 1 }}>
-                    <Box sx={{ mt: 2 }}>
-                        {loading ? (
-                            <Box
-                                sx={{
-                                    width: '100%',
-                                    mt: '3%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                <CircularProgress sx={{ mr: 5 }} />
-                                <Typography sx={{ mb: 2 }} variant="h3">
-                                    LOADING
-                                </Typography>
-                            </Box>
-                        ) : (
-                            <ProductCard
-                            //     id={offerUpdate.id}
-                            //     title={offerUpdate.title}
-                            //     title_ar={offerUpdate.title_ar}
-                            //     url={offerUpdate.url}
-                            //     handleSubmit={handleUpdateSubmit}
-                            //     enable={offerUpdate.is_enable}
-                            //     image={offerUpdate.image_name}
-                            />
-                        )}
-                    </Box>
-                </Box>
-            </Popup>
+        <Box sx={{ mb: 1 }}>
+        
+          <form onSubmit={updateProductshandleSubmit} >
+            <Box sx={{ mb: 1 }}>
+              <TextField
+                name="name"
+                variant="filled"
+                label="Product Name"
+                fullWidth
+                value={inputs.name}
+                onChange={(e) =>
+                  setInputs({
+                    ...inputs,
+                    name: e.target.value,
+                  })
+                }
+              />
+              {errors["name"] && (
+                <Typography color="error">{errors["name"]}</Typography>
+              )}
+            </Box>
+            <Box sx={{ mb: 1 }}>
+              <TextField
+                name="description"
+                variant="filled"
+                label="Product Description"
+                fullWidth
+                value={inputs.description}
+                onChange={(e) =>
+                  setInputs({
+                    ...inputs,
+                    description: e.target.value,
+                  })
+                }
+              />
+              {errors["description"] && (
+                <Typography color="error">
+                  {errors["description"]}
+                </Typography>
+              )}
+            </Box>
+            <Box sx={{ mb: 1 }}>
+              <TextField
+                name="price"
+                variant="filled"
+                label="Product Price"
+                fullWidth
+                value={inputs.price}
+                type="number"
+                InputProps={{ inputProps: { min: 0 }, shrink: "true" }}
+                onChange={(e) =>
+                  setInputs({
+                    ...inputs,
+                    price: e.target.value,
+                  })
+                }
+              />
+              {errors["price"] && (
+                <Typography color="error">{errors["price"]}</Typography>
+              )}
+            </Box>
+            <Box sx={{ mb: 1 }}>
+              <TextField
+                name="unit"
+                variant="filled"
+                label="Units"
+                fullWidth
+                value={inputs.unit}
+                type="number"
+                InputProps={{ inputProps: { min: 0 }, shrink: "true" }}
+                onChange={(e) =>
+                  setInputs({
+                    ...inputs,
+                    unit: e.target.value,
+                  })
+                }
+              />
+              {errors["unit"] && (
+                <Typography color="error">{errors["unit"]}</Typography>
+              )}
+            </Box>
+            <Box sx={{ mb: 1 }}>
+              <TextField
+                name="unitAmount"
+                variant="filled"
+                label="Unit Amount"
+                fullWidth
+                value={inputs.unitAmount}
+                type="number"
+                InputProps={{ inputProps: { min: 0 }, shrink: "true" }}
+                onChange={(e) =>
+                  setInputs({
+                    ...inputs,
+                    unitAmount: e.target.value,
+                  })
+                }
+              />
+              {errors["unitAmount"] && (
+                <Typography color="error">{errors["unitAmount"]}</Typography>
+              )}
+            </Box>
 
+            <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
+              <Button
+                type="reset"
+                variant="contained"
+                onClick={handleUpdateClear}
+                sx={{ py: 2, px: 5, mr: 2, backgroundColor: colors.grey }}
+              >
+                Clear
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ py: 2, px: 5 }}
+                disabled={isLoading}
+              >
+                {isLoading ? <CircularProgress color="secondary" /> : "Save"}
+              </Button>
+            </Box>
+          </form>
+        </Box>
+      </Popup>      
       {/* custom popup */}
       <Popup width={700} show={showDeletePopup} onClose={handleDeletePopupClose}>
                 <Box sx={{ mb: 1 }}>
