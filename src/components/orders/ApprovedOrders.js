@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, CircularProgress, Grid, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import ReusableTable from "../common/ReusableTable";
-import { completeOrder, rejectOrder } from "../../service/order.service";
+import { completeOrder, confirmOrder, rejectOrder } from "../../service/order.service";
 import { popAlert } from "../../utils/alerts";
 
 const tableColumns = [
@@ -39,9 +39,10 @@ const ApprovedOrder = ({ order, onDataUpdate }) => {
 
   const handleCompleteOrder = async (orderId) => {
     setIsSaving(true);
-    const response = await completeOrder(orderId);
+    const response = await confirmOrder(orderId);
     setIsSaving(false);
 
+    console.log("confirmOrder",response);
     if (response.success) {
       popAlert("Success!", response?.data?.message, "success");
       onDataUpdate();
