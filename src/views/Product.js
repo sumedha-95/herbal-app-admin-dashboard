@@ -80,7 +80,8 @@ const tableColumns = [
 ];
 
 const Product = () => {
-    const { id } = useParams();
+  const { id } = useParams();
+  console.log("ado weda karapan",id);
   const navigate = useNavigate();
   const [inputs, setInputs] = useState(Products);
   const [errors, setErrors] = useState({});
@@ -110,7 +111,7 @@ const Product = () => {
   const response = await createProduct(inputs);  
   if (response.success) {
     setRefresh(!refresh);
-    response?.data?.message &&
+    response?.data &&
       popAlert("Success!", response?.data?.message, "success").then((res) => {
         setShowPopup(false);
       });
@@ -119,7 +120,8 @@ const Product = () => {
       popAlert("Error!", response?.data?.message, "error");
     response?.data?.data && setErrors(response.data.data);
   }
-  setLoading(false);
+    setLoading(false);
+    setInputs(Products);
 };
 
 
@@ -165,64 +167,64 @@ const Product = () => {
 
    
 
-  useEffect(() => {
-    let unmounted = false;
+  // useEffect(() => {
+  //   let unmounted = false;
 
-    if (!unmounted) setIsLoading(true);
+  //   if (!unmounted) setIsLoading(true);
 
-    const fetchAndSet = async () => {
-      const response = await getPaginatedProducts(
-        pagination.page,
-        pagination.limit,
-        pagination.orderBy,
-      );
+  //   const fetchAndSet = async () => {
+  //     const response = await getPaginatedProducts(
+  //       pagination.page,
+  //       pagination.limit,
+  //       pagination.orderBy,
+  //     );
 
-      if (response.success) {
-        if (!response.data) return;
+  //     if (response.success) {
+  //       if (!response.data) return;
 
-        let tableDataArr = [];
-        for (const product of response.data.content) {
-          console.log("product kkkkkkkkk",product);
-          tableDataArr.push({
-          id: product._id,
-          // image: product.firebaseStorageRef,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          unit: product.unit,
-          unitAmount: product.unitAmount,
-          seller: product.seller?.name,
-          updatedAt: product.updatedAt?.substring(0, 10),
-          action: (
-              <TableAction
-                id={product._id}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ),
-          });
-        }
-        if (!unmounted) {
-          setTotalElements(response.data.totalElements);
-          setTableRows(tableDataArr);
-          setProducts(response.data.content);
+  //       let tableDataArr = [];
+  //       for (const product of response.data.content) {
+  //         console.log("product kkkkkkkkk",product);
+  //         tableDataArr.push({
+  //         id: product._id,
+  //         // image: product.firebaseStorageRef,
+  //         name: product.name,
+  //         price: product.price,
+  //         description: product.description,
+  //         unit: product.unit,
+  //         unitAmount: product.unitAmount,
+  //         seller: product.seller?.name,
+  //         updatedAt: product.updatedAt?.substring(0, 10),
+  //         action: (
+  //             <TableAction
+  //               id={product._id}
+  //               onEdit={() => handleEdit(id)}
+  //               onDelete={handleDelete}
+  //             />
+  //           ),
+  //         });
+  //       }
+  //       if (!unmounted) {
+  //         setTotalElements(response.data.totalElements);
+  //         setTableRows(tableDataArr);
+  //         setProducts(response.data.content);
          
-        }
-      } else {
-        console.error(response?.data);
-      }
-      if (!unmounted) setIsLoading(false);
-    };
+  //       }
+  //     } else {
+  //       console.error(response?.data);
+  //     }
+  //     if (!unmounted) setIsLoading(false);
+  //   };
 
-    if (!isSeller) {
-        fetchAndSet();
-    }
+    
+  //       fetchAndSet();
+    
 
-    return () => {
-      unmounted = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination, refresh, keyword]);
+  //   return () => {
+  //     unmounted = true;
+  //   };
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [pagination, refresh, keyword]);
 
   useEffect(() => {
     let unmounted = false;
@@ -230,6 +232,7 @@ const Product = () => {
     if (!unmounted) setIsLoading(true);
 
     const fetchAndSet = async () => {
+
       const response = await getSelfPaginatedProducts(
         pagination.page,
         pagination.limit,
@@ -241,7 +244,7 @@ const Product = () => {
 
         let tableDataArr = [];
         for (const product of response.data.content) {
-          console.log("product kkkkkkkkk",product);
+          console.log("product kkkkkkkkk", product);
           tableDataArr.push({
           id: product._id,
           // image: product.firebaseStorageRef,
@@ -255,16 +258,20 @@ const Product = () => {
           action: (
               <TableAction
                 id={product._id}
-                onEdit={handleEdit}
+                onEdit={() => handleEdit(product._id)}
                 onDelete={handleDelete}
               />
             ),
           });
         }
+        console.log("response.data.contentuuuuuuuuu", response?.data?.content[0]);
+        setInputs(response?.data?.content[0]);
         if (!unmounted) {
           setTotalElements(response.data.totalElements);
           setTableRows(tableDataArr);
           setProducts(response.data.content);
+          setInputs(response.data.content);
+          console.log("response.data.content",response.data.content);
          
         }
       } else {
@@ -273,9 +280,7 @@ const Product = () => {
       if (!unmounted) setIsLoading(false);
     };
 
-    if (isSeller) {
         fetchAndSet();
-    }
 
     return () => {
       unmounted = true;
@@ -295,8 +300,9 @@ const Product = () => {
       response?.data?.message &&
         popAlert("Success!", response?.data?.message, "success").then((res) => {
             setShowPopup(true);
-            window.location.replace("/")
+          
         });
+      window.location.reload();
     } else {
       response?.data?.message &&
         popAlert("Error!", response?.data?.message, "error");
@@ -327,6 +333,25 @@ const Product = () => {
     setIsLoading(false);
   };
 
+  // useEffect(() => {
+  //   let unmounted = false
+
+  //   const fetchData = async () =>{
+  //     const response = await findById(id);
+  //     if (response.success) {
+  //     // console.log('adoooo',response);
+  //       if (!unmounted) {
+  //         const json = await response.data
+  //       setProducts(response?.data);
+  //         setInputs(response?.data);
+  //         console.log("josn",response?.data);
+  //     }
+  //     }
+  //   }
+  //   fetchData();
+  // }, [])
+  
+  
 
    const handleUpdateClear = () => {
     setInputs(updateProducts);
@@ -334,28 +359,47 @@ const Product = () => {
 
   //product find by id
   useEffect(() => {
-    let unmounted = false
-
-    const fetchAndSet = async () =>{
-      const response = await findById(selectedOrderId);
+    // let unmounted = false
+console.log("yutuuu");
+    const fetchAndSet = async () => {
+      console.log('tableRowID',tableRows.id);
+      const response = await findById(tableRows.id);
       if (response.success) {
-      
-      if(!unmounted){
+          console.log('adoooo',response);
+      // if(!unmounted){
         setProducts(response?.data);
         setInputs(response?.data);
-      }
+      // }
     }
   }
 
   fetchAndSet();
 
-    return () => {
-      unmounted = true;
-    };
-  }, [selectedOrderId, refresh]);
+    // return () => {
+    //   unmounted = true;
+    // };
+  }, [id]);
 
 
   const handleEdit = (id) => {
+
+  setLoading(true);
+
+  const response = updateProducts(id,inputs);  
+  if (response.success) {
+    setRefresh(!refresh);
+    response?.data?.message &&
+      popAlert("Success!", response?.data?.message, "success").then((res) => {
+        setShowPopup(false);
+      });
+  } else {
+    response?.data?.message &&
+      popAlert("Error!", response?.data?.message, "error");
+    response?.data?.data && setErrors(response.data.data);
+  }
+    setLoading(false);
+    setInputs(Products);
+
     console.log('Product ID:', id);
     setSelectedOrderId(id)
     setShowUpdatePopup(true);

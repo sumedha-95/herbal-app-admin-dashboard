@@ -18,7 +18,6 @@ export const createProduct = async (data) => {
   console.log("data",data);
   const { file } = data;
   
-
   const formData = new FormData();
   formData.append("strigifiedBody", JSON.stringify(data));
   formData.append("file", file);

@@ -28,7 +28,7 @@ const SignIn = () => {
       setLoading(false);
       dispatch(authActions.login(response.data));
       response?.data &&
-        popAlert("Success!", response?.data, "success").then((res) => {
+        popAlert("Success!", response?.data.message, "Succes").then((res) => {
           window.location.replace("/");
         });
     } else {
