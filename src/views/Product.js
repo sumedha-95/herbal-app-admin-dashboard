@@ -20,7 +20,14 @@ import {
 } from "@mui/material";
 import Popup from "../components/common/Popup";
 import ReusableTable from "../components/common/ReusableTable";
-import { createPharmacy, createProduct, deleteProducts, findById, getPaginatedProducts, getSelfPaginatedProducts, getallPharmacies, updateProducts } from "../service/product.service";
+import {
+  createProduct,
+  deleteProducts,
+  findById,
+  getPaginatedProducts,
+  getSelfPaginatedProducts,
+  updateProducts,
+} from "../service/product.service";
 import { popAlert, popDangerPrompt } from "../utils/alerts";
 import colors from "../assets/styles/colors";
 import TableAction from "../components/common/TableActions";
@@ -36,7 +43,7 @@ import DeleteButton from "../components/common/DeleteButton";
 import { useSelector } from "react-redux";
 
 //table columns
-const tableColumns = [ 
+const tableColumns = [
   {
     id: "name",
     label: "Name",
@@ -52,7 +59,7 @@ const tableColumns = [
     label: "Units",
     align: "left",
   },
-    {
+  {
     id: "price",
     label: "Price",
     align: "left",
@@ -80,7 +87,7 @@ const tableColumns = [
 ];
 
 const Product = () => {
-    const { id } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [inputs, setInputs] = useState(Products);
   const [errors, setErrors] = useState({});
@@ -100,28 +107,27 @@ const Product = () => {
   const [keyword, setKeyword] = useState("");
   const [ProductsNew, setProducts] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState(false);
-  const [isSeller,setisSeller] = useState(false)
+  const [isSeller, setisSeller] = useState(false);
 
   const handleSubmit = async (e) => {
-  console.log("Hi");
-  e.preventDefault();
-  setLoading(true);
+    console.log("Hi");
+    e.preventDefault();
+    setLoading(true);
 
-  const response = await createProduct(inputs);  
-  if (response.success) {
-    setRefresh(!refresh);
-    response?.data?.message &&
-      popAlert("Success!", response?.data?.message, "success").then((res) => {
-        setShowPopup(false);
-      });
-  } else {
-    response?.data?.message &&
-      popAlert("Error!", response?.data?.message, "error");
-    response?.data?.data && setErrors(response.data.data);
-  }
-  setLoading(false);
-};
-
+    const response = await createProduct(inputs);
+    if (response.success) {
+      setRefresh(!refresh);
+      response?.data?.message &&
+        popAlert("Success!", response?.data?.message, "success").then((res) => {
+          setShowPopup(false);
+        });
+    } else {
+      response?.data?.message &&
+        popAlert("Error!", response?.data?.message, "error");
+      response?.data?.data && setErrors(response.data.data);
+    }
+    setLoading(false);
+  };
 
   const handleMapInput = (input) => {
     setInputs(input);
@@ -153,17 +159,14 @@ const Product = () => {
 
   const authState = useSelector((state) => state.auth);
 
-    useEffect(() => {
-
-    if (authState.user.role == 'seller') {
-      setisSeller(true)
+  useEffect(() => {
+    if (authState.user.role == "seller") {
+      setisSeller(true);
     }
-    
+
     if (!window.location.href.includes("auth") && !authState?.isLoggedIn)
       window.location.replace("/auth/sign-in");
   }, [authState.isLoggedIn]);
-
-   
 
   useEffect(() => {
     let unmounted = false;
@@ -174,7 +177,7 @@ const Product = () => {
       const response = await getPaginatedProducts(
         pagination.page,
         pagination.limit,
-        pagination.orderBy,
+        pagination.orderBy
       );
 
       if (response.success) {
@@ -182,18 +185,18 @@ const Product = () => {
 
         let tableDataArr = [];
         for (const product of response.data.content) {
-          console.log("product kkkkkkkkk",product);
+          console.log("product kkkkkkkkk", product);
           tableDataArr.push({
-          id: product._id,
-          // image: product.firebaseStorageRef,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          unit: product.unit,
-          unitAmount: product.unitAmount,
-          seller: product.seller?.name,
-          updatedAt: product.updatedAt?.substring(0, 10),
-          action: (
+            id: product._id,
+            // image: product.firebaseStorageRef,
+            name: product.name,
+            price: product.price,
+            description: product.description,
+            unit: product.unit,
+            unitAmount: product.unitAmount,
+            seller: product.seller?.name,
+            updatedAt: product.updatedAt?.substring(0, 10),
+            action: (
               <TableAction
                 id={product._id}
                 onEdit={handleEdit}
@@ -206,7 +209,6 @@ const Product = () => {
           setTotalElements(response.data.totalElements);
           setTableRows(tableDataArr);
           setProducts(response.data.content);
-         
         }
       } else {
         console.error(response?.data);
@@ -215,7 +217,7 @@ const Product = () => {
     };
 
     if (!isSeller) {
-        fetchAndSet();
+      fetchAndSet();
     }
 
     return () => {
@@ -233,7 +235,7 @@ const Product = () => {
       const response = await getSelfPaginatedProducts(
         pagination.page,
         pagination.limit,
-        pagination.orderBy,
+        pagination.orderBy
       );
 
       if (response.success) {
@@ -241,18 +243,18 @@ const Product = () => {
 
         let tableDataArr = [];
         for (const product of response.data.content) {
-          console.log("product kkkkkkkkk",product);
+          console.log("product kkkkkkkkk", product);
           tableDataArr.push({
-          id: product._id,
-          // image: product.firebaseStorageRef,
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          unit: product.unit,
-          unitAmount: product.unitAmount,
-          seller: product.seller?.name,
-          updatedAt: product.updatedAt?.substring(0, 10),
-          action: (
+            id: product._id,
+            // image: product.firebaseStorageRef,
+            name: product.name,
+            price: product.price,
+            description: product.description,
+            unit: product.unit,
+            unitAmount: product.unitAmount,
+            seller: product.seller?.name,
+            updatedAt: product.updatedAt?.substring(0, 10),
+            action: (
               <TableAction
                 id={product._id}
                 onEdit={handleEdit}
@@ -265,7 +267,6 @@ const Product = () => {
           setTotalElements(response.data.totalElements);
           setTableRows(tableDataArr);
           setProducts(response.data.content);
-         
         }
       } else {
         console.error(response?.data);
@@ -274,7 +275,7 @@ const Product = () => {
     };
 
     if (isSeller) {
-        fetchAndSet();
+      fetchAndSet();
     }
 
     return () => {
@@ -286,33 +287,39 @@ const Product = () => {
   const deleteProductshandleSubmit = async (id) => {
     setIsLoading(true);
 
-    popDangerPrompt("DELETE", "Are You sure you want to delete this product!" ,"error").then( async (res) =>{
+    popDangerPrompt(
+      "DELETE",
+      "Are You sure you want to delete this product!",
+      "error"
+    ).then(async (res) => {
       if (res.isConfirmed) {
-        
-      const response = await deleteProducts(id);
-    
-    if (response.success) {
-      response?.data?.message &&
-        popAlert("Success!", response?.data?.message, "success").then((res) => {
-            setShowPopup(true);
-            window.location.replace("/")
-        });
-    } else {
-      response?.data?.message &&
-        popAlert("Error!", response?.data?.message, "error");
-      response?.data?.data && setErrors(response.data.data);
-    }
-  }});
-  setIsLoading(false); 
-};
+        const response = await deleteProducts(id);
+
+        if (response.success) {
+          response?.data?.message &&
+            popAlert("Success!", response?.data?.message, "success").then(
+              (res) => {
+                setShowPopup(true);
+                window.location.replace("/");
+              }
+            );
+        } else {
+          response?.data?.message &&
+            popAlert("Error!", response?.data?.message, "error");
+          response?.data?.data && setErrors(response.data.data);
+        }
+      }
+    });
+    setIsLoading(false);
+  };
 
   //update Product
-   const updateProductshandleSubmit = async (e) => {
+  const updateProductshandleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     const response = await updateProducts(selectedOrderId, inputs);
-    console.log(inputs)
+    console.log(inputs);
     if (response.success) {
       setRefresh(!refresh);
       response?.data?.message &&
@@ -327,62 +334,57 @@ const Product = () => {
     setIsLoading(false);
   };
 
-
-   const handleUpdateClear = () => {
+  const handleUpdateClear = () => {
     setInputs(updateProducts);
   };
 
   //product find by id
   useEffect(() => {
-    let unmounted = false
+    let unmounted = false;
 
-    const fetchAndSet = async () =>{
+    const fetchAndSet = async () => {
       const response = await findById(selectedOrderId);
       if (response.success) {
-      
-      if(!unmounted){
-        setProducts(response?.data);
-        setInputs(response?.data);
+        if (!unmounted) {
+          setProducts(response?.data);
+          setInputs(response?.data);
+        }
       }
-    }
-  }
+    };
 
-  fetchAndSet();
+    fetchAndSet();
 
     return () => {
       unmounted = true;
     };
   }, [selectedOrderId, refresh]);
 
-
   const handleEdit = (id) => {
-    console.log('Product ID:', id);
-    setSelectedOrderId(id)
+    console.log("Product ID:", id);
+    setSelectedOrderId(id);
     setShowUpdatePopup(true);
-    
-};
+  };
 
   const handleDelete = (id) => {
-
-    console.log("handleDelete",id);
+    console.log("handleDelete", id);
     deleteProductshandleSubmit(id);
   };
 
   const handleDelet = (id, image_name, url, title, title_ar, enable) => {
-        setShowDeletePopup({
-            id: id,
-            image_name: image_name,
-            url: url,
-            title: title,
-            title_ar: title_ar,
-            is_enable: enable
-        });
+    setShowDeletePopup({
+      id: id,
+      image_name: image_name,
+      url: url,
+      title: title,
+      title_ar: title_ar,
+      is_enable: enable,
+    });
 
-        setShowDeletePopup(true);
-    };
-  console.log('tavb;e', tableRows);
-  console.log('hhhhh', showUpdatePopup);
-  console.log('ProductUpdateeeeeeeeeee',inputs);
+    setShowDeletePopup(true);
+  };
+  console.log("tavb;e", tableRows);
+  console.log("hhhhh", showUpdatePopup);
+  console.log("ProductUpdateeeeeeeeeee", inputs);
   return (
     <React.Fragment>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
@@ -425,7 +427,7 @@ const Product = () => {
             mt: "3%",
           }}
         >
-           <ReusableTable
+          <ReusableTable
             rows={tableRows}
             columns={tableColumns}
             totalElements={totalElements}
@@ -433,7 +435,7 @@ const Product = () => {
             page={pagination.page}
             onPageChange={handlePageChange}
             onLimitChange={handleLimitChange}
-          /> 
+          />
         </Box>
       )}
 
@@ -479,9 +481,7 @@ const Product = () => {
                 }
               />
               {errors["description"] && (
-                <Typography color="error">
-                  {errors["description"]}
-                </Typography>
+                <Typography color="error">{errors["description"]}</Typography>
               )}
             </Box>
             <Box sx={{ mb: 1 }}>
@@ -546,25 +546,24 @@ const Product = () => {
                 <Typography color="error">{errors["unitAmount"]}</Typography>
               )}
             </Box>
-           <Box sx={{ mb: 1 }}>
-  <Typography>File</Typography>
-  <input
-    name="file"
-    type="file"
-    onChange={(e) => {
-      const file = e.target.files[0];
-      setInputs({
-        ...inputs,
-        file: file,
-      });
-    }}
-  />
-  {errors["file"] && (
-    <Typography color="error">{errors["file"]}</Typography>
-  )}
-</Box>
+            <Box sx={{ mb: 1 }}>
+              <Typography>File</Typography>
+              <input
+                name="file"
+                type="file"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  setInputs({
+                    ...inputs,
+                    file: file,
+                  });
+                }}
+              />
+              {errors["file"] && (
+                <Typography color="error">{errors["file"]}</Typography>
+              )}
+            </Box>
 
-           
             <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
               <Button
                 type="reset"
@@ -586,12 +585,16 @@ const Product = () => {
           </form>
         </Box>
       </Popup>
-  
+
       {/* custom popup */}
-            <Popup title='Update Products' width={800} show={showUpdatePopup} onClose={handleUpdatePopupClose}>
+      <Popup
+        title="Update Products"
+        width={800}
+        show={showUpdatePopup}
+        onClose={handleUpdatePopupClose}
+      >
         <Box sx={{ mb: 1 }}>
-        
-          <form onSubmit={updateProductshandleSubmit} >
+          <form onSubmit={updateProductshandleSubmit}>
             <Box sx={{ mb: 1 }}>
               <TextField
                 name="name"
@@ -625,9 +628,7 @@ const Product = () => {
                 }
               />
               {errors["description"] && (
-                <Typography color="error">
-                  {errors["description"]}
-                </Typography>
+                <Typography color="error">{errors["description"]}</Typography>
               )}
             </Box>
             <Box sx={{ mb: 1 }}>
@@ -711,34 +712,36 @@ const Product = () => {
             </Box>
           </form>
         </Box>
-      </Popup>      
+      </Popup>
       {/* custom popup */}
-      <Popup width={700} show={showDeletePopup} onClose={handleDeletePopupClose}>
-                <Box sx={{ mb: 1 }}>
-                    <Box sx={{ mt: 2 }}>
-                        {loading ? (
-                            <Box
-                                sx={{
-                                    width: '100%',
-                                    mt: '3%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                <CircularProgress sx={{ mr: 5 }} />
-                                <Typography sx={{ mb: 2 }} variant="h3">
-                                    LOADING
-                                </Typography>
-                            </Box>
-                        ) : (
-                            <ProductDelete />
-                        )}
-                    </Box>
-                </Box>
-            </Popup>
-
-      
+      <Popup
+        width={700}
+        show={showDeletePopup}
+        onClose={handleDeletePopupClose}
+      >
+        <Box sx={{ mb: 1 }}>
+          <Box sx={{ mt: 2 }}>
+            {loading ? (
+              <Box
+                sx={{
+                  width: "100%",
+                  mt: "3%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <CircularProgress sx={{ mr: 5 }} />
+                <Typography sx={{ mb: 2 }} variant="h3">
+                  LOADING
+                </Typography>
+              </Box>
+            ) : (
+              <ProductDelete />
+            )}
+          </Box>
+        </Box>
+      </Popup>
     </React.Fragment>
   );
 };

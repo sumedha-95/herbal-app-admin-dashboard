@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -8,29 +8,27 @@ import {
 } from "@mui/material";
 import colors from "../assets/styles/colors";
 import signUp from "../models/signUp";
-import { signUpUser } from "../service/signUp.service";
 import { popAlert } from "../utils/alerts";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { register } from "../service/auth.service";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const [RegInputs, setRegInputs] = useState(signUp);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-   const [conError, setConError] = useState("");
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const response = await signUpUser(RegInputs);
+    const response = await register(RegInputs);
 
     if (response.success) {
       response?.data &&
-        popAlert("Success!", response?.data, "success").then(
-          (res) => { window.location.replace("/auth/sign-in");}
-        );
+        popAlert("Success!", response?.data, "success").then((res) => {
+          window.location.replace("/auth/sign-in");
+        });
     } else {
       response?.data?.message &&
         popAlert("Error!", response?.data?.message, "error");
@@ -51,6 +49,7 @@ const SignUp = () => {
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: colors.secondary,
+          minHeight: "100vh",
         }}
       >
         <Box
@@ -124,7 +123,9 @@ const SignUp = () => {
                   }
                 />
                 {errors["contactNumber"] && (
-                  <Typography color="error">{errors["contactNumber"]}</Typography>
+                  <Typography color="error">
+                    {errors["contactNumber"]}
+                  </Typography>
                 )}
               </Box>
 
@@ -182,7 +183,7 @@ const SignUp = () => {
                 {errors["password"] && (
                   <Typography color="error">{errors["password"]}</Typography>
                 )}
-              </Box>         
+              </Box>
 
               <Box
                 sx={{
@@ -212,7 +213,8 @@ const SignUp = () => {
             </form>
             <Box textAlign={"center"} sx={{ cursor: "pointer" }}>
               <Typography variant="h7" color="primary">
-                Already have an account?
+                Already have an account?{" "}
+                <span onClick={() => navigate("/auth/sign-in")}>Login</span>
               </Typography>
             </Box>
           </Box>
