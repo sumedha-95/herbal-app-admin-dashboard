@@ -8,14 +8,15 @@ import {
 } from "@mui/material";
 import colors from "../assets/styles/colors";
 import signup from "../models/signUp";
-import { createUser } from "../service/auth.service";
+import { login } from "../service/auth.service";
 import { popAlert } from "../utils/alerts";
 import { useDispatch } from "react-redux";
 import { authActions } from "../store/authSlice";
+import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
   const dispatch = useDispatch();
-
+  const navigate = useNavigate();
   const [inputs, setInputs] = useState(signup);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -23,17 +24,16 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const response = await createUser(inputs);
+    const response = await login(inputs);
     if (response.success) {
       setLoading(false);
       dispatch(authActions.login(response.data));
       response?.data &&
-        popAlert("Success!", response?.data.message, "Succes").then((res) => {
+        popAlert("Success!", "Login Successful!", "success").then((res) => {
           window.location.replace("/");
         });
     } else {
-      response?.data &&
-        popAlert("Error!", response?.data, "error");
+      response?.data && popAlert("Error!", response.data.message, "error");
       response?.data && setErrors(response.data);
     }
     setLoading(false);
@@ -128,7 +128,8 @@ const SignIn = () => {
             </form>
             <Box textAlign={"center"} sx={{ cursor: "pointer" }}>
               <Typography variant="h7" color="primary">
-                Do you need to create an account?
+                Do you need to create an account?{" "}
+                <span onClick={() => navigate("/auth/sign-up")}>Register</span>
               </Typography>
             </Box>
           </Box>

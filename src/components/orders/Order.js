@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, CircularProgress, Grid, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import ReusableTable from "../common/ReusableTable";
-import { completeOrder, rejectOrder } from "../../service/order.service";
+import { confirmOrder } from "../../service/order.service";
 import { popAlert } from "../../utils/alerts";
 
 const tableColumns = [
@@ -33,15 +33,16 @@ const boxStyles = {
   p: 3,
 };
 
-const UnApprovedOrder = ({ order, onDataUpdate  }) => {
+const Order = ({ order, onDataUpdate }) => {
   const [tableRows, setTableRows] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleCompleteOrder = async (orderId) => {
+  const handleConfirmOrder = async (orderId) => {
     setIsSaving(true);
-    const response = await completeOrder(orderId);
+    const response = await confirmOrder(orderId);
     setIsSaving(false);
 
+    console.log("confirmOrder",response);
     if (response.success) {
       popAlert("Success!", response?.data?.message, "success");
       onDataUpdate();
@@ -51,34 +52,20 @@ const UnApprovedOrder = ({ order, onDataUpdate  }) => {
     }
   };
 
-  const handleRejectOrder = async (orderId) => {
-    setIsSaving(true);
-    const response = await rejectOrder(orderId);
-    setIsSaving(false);
-
-    if (response.success) {
-      popAlert("Success!", response?.data?.message, "success");
-      onDataUpdate();
-    } else {
-      response?.data?.message &&
-        popAlert("Error!", response?.data?.message, "error");
-    }
-  };
 
   useEffect(() => {
     let unmounted = false;
 
     if (order?.items) {
-      console.log('oooo',order);
+      console.log("oooo", order);
       let preparedArr = [];
       for (const items of order.items) {
-          preparedArr.push({
-            id: items.product._id,
-            name: items.product.name,
-            quantity: items.quantity,
-            subTotal: items.total,
-          });
-        
+        preparedArr.push({
+          id: items.product._id,
+          name: items.product.name,
+          quantity: items.quantity,
+          subTotal: items.total,
+        });
       }
       if (!unmounted) setTableRows(preparedArr);
     }
@@ -90,19 +77,13 @@ const UnApprovedOrder = ({ order, onDataUpdate  }) => {
 
   return (
     <React.Fragment>
-      <Grid container spacing={2} sx={{ mt: 1 }}>
+      <Grid container spacing={2} sx={{ mt: 2, mb: 4 }}>
         <Grid item xs={12} lg={7}>
           <Grid container spacing={2}>
+            <Grid item xs={12}></Grid>
             <Grid item xs={12}>
-              {/* <img
-                style={{ width: "100%", objectFit: "contain", borderRadius: 8 }}
-                src={order?.prescriptionSheet}
-                alt="product image"
-              /> */}
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="h7" fontWeight={"bold"} sx={{ mb: 1 }}>
-               Products
+              <Typography variant="h5" fontWeight={"bold"} sx={{ mb: 1 }}>
+                Products
               </Typography>
               <ReusableTable rows={tableRows} columns={tableColumns} />
             </Grid>
@@ -126,9 +107,7 @@ const UnApprovedOrder = ({ order, onDataUpdate  }) => {
                 <Typography>
                   Created At - {new Date(order?.createdAt).toDateString()}
                 </Typography>
-                <Typography>
-                  Sub Total - Rs.{order?.subTotal}
-                </Typography>
+                <Typography>Sub Total - Rs.{order?.subTotal}</Typography>
                 <Typography>
                   Shipping Charges - Rs.{order?.shippingCharge}
                 </Typography>
@@ -145,10 +124,9 @@ const UnApprovedOrder = ({ order, onDataUpdate  }) => {
                 </Typography>
                 <Typography>Name - {order?.shipping?.name}</Typography>
                 <Typography>Address - {order?.shipping?.address}</Typography>
-                <Typography>Contact Number - {order?.shipping?.contactNumber}</Typography>
-                {/* <Typography>
-                  Contact - {order?.patient?.contactNumber}
-                </Typography> */}
+                <Typography>
+                  Contact Number - {order?.shipping?.contactNumber}
+                </Typography>
               </Box>
             </Grid>
             <Grid item xs={12}>
@@ -159,13 +137,13 @@ const UnApprovedOrder = ({ order, onDataUpdate  }) => {
                 <Typography>Address - {order?.shipping?.address}</Typography>
               </Box>
             </Grid>
-            {order.status === "paid" &&  (
+            {order.status === "paid" && (
               <Grid item xs={12}>
                 <Button
                   variant="contained"
                   size="large"
                   fullWidth
-                  onClick={() => handleCompleteOrder(order._id)}
+                  onClick={() => handleConfirmOrder(order._id)}
                   sx={{
                     height: 56,
                     borderRadius: "8px",
@@ -173,36 +151,11 @@ const UnApprovedOrder = ({ order, onDataUpdate  }) => {
                   }}
                   disabled={isSaving}
                 >
-                  Waiting for Approval
+                  Confirm Order
                   {isSaving && (
                     <>
                       &nbsp;&nbsp;
-                      <CircularProgress size={"24px"} color={"Yellow"} />
-                    </>
-                  )}
-                </Button>
-              </Grid>
-            )}
-            {order.status === "pending" && (
-              <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  fullWidth
-                  onClick={() => handleRejectOrder(order._id)}
-                  sx={{
-                    height: 56,
-                    borderRadius: "8px",
-                    boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.25)",
-                  }}
-                  disabled={isSaving}
-                  color="error"
-                >
-                  Waiting for Payment
-                  {isSaving && (
-                    <>
-                      &nbsp;&nbsp;
-                      <CircularProgress size={"24px"} color={"secondary"} />
+                      <CircularProgress size={"24px"} />
                     </>
                   )}
                 </Button>
@@ -215,4 +168,4 @@ const UnApprovedOrder = ({ order, onDataUpdate  }) => {
   );
 };
 
-export default UnApprovedOrder;
+export default Order;

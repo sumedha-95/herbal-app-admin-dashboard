@@ -1,37 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
-import SearchBar from "../components/common/SearchBar";
-import AddButton from "../components/common/AddButton";
-import ReportButton from "../components/common/ReportButton";
 import {
-  Grid,
   Box,
-  Autocomplete,
-  TextField,
   Typography,
   CircularProgress,
 } from "@mui/material";
 import Popup from "../components/common/Popup";
 import ReusableTable from "../components/common/ReusableTable";
-import { getOrdersByPharmacy, getOrdersByProducts } from "../service/order.service";
+import { getOrders } from "../service/order.service";
 import TableAction from "../components/common/TableActions";
-
-import ApprovedOrder from "../components/orders/ApprovedOrders"
-import OrderReport from "../components/orders/OrderReport";
-import UnApprovedOrder from "../components/orders/UnApprovedOrder";
-
-const Pharamcies = [
-  { label: "Samarasingha Pharamcy", _id: "6312055d361e1bab6496fd32" },
-];
+import Order from "../components/orders/Order";
 
 const tableColumns = [
-  
-  // {
-  // id: 'image',
-  // label: 'Image',
-  // minWidth: 100,
-  // align: 'center',
-  // format: (value) => <img src={value} alt="Product" style={{ width: '100%' }} />,
-  // },
   {
     id: "id",
     label: "Order ID",
@@ -46,7 +25,7 @@ const tableColumns = [
     id: "status",
     label: "Status",
     align: "left",
-  }, 
+  },
   {
     id: "total",
     label: "Total",
@@ -61,33 +40,23 @@ const tableColumns = [
 
 const Orders = () => {
   const [showPopup, setShowPopup] = useState(false);
-  const [selectedPharmacyId, setSelectedPharmacyId] = useState(
-    Pharamcies[0]?._id
-  );
+
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 10,
+    limit: 25,
     orderBy: "desc",
   });
   const [tableRows, setTableRows] = useState([]);
   const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [keyword, setKeyword] = useState("");
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [refresh, setRefresh] = useState(false);
   const [orders, setOrders] = useState([]);
-  const [printComponentRef, setPrintComponentRef] = useState(null);
-  const [reportLoading, setReportLoading] = useState(false);
-
-  const handlePrintComponentRef = (ref) => {
-    setPrintComponentRef(ref);
-  };
 
   const handlePopupClose = () => setShowPopup(false);
 
   const handleView = (id) => {
     setSelectedOrderId(id);
-    console.log('kooooo',id);
     setShowPopup(true);
   };
 
@@ -99,47 +68,39 @@ const Orders = () => {
     setPagination({ ...pagination, limit: limit });
   };
 
-  const handleSearch = (input) => {
-    setKeyword(input);
-  };
-
   const handleDataUpdate = () => {
     setRefresh(!refresh);
-    setShowPopup(false);
   };
 
   const selectedOrder = useMemo(
-  
     () => orders.find((order) => order._id === selectedOrderId),
     [selectedOrderId, orders]
   );
-console.log("selectedOrder",selectedOrder);
+
   useEffect(() => {
     let unmounted = false;
 
     if (!unmounted) setIsLoading(true);
 
     const fetchAndSet = async () => {
-      const response = await getOrdersByProducts(
+      const response = await getOrders(
         pagination.page,
         pagination.limit,
-        pagination.orderBy,
+        pagination.orderBy
       );
 
       if (response.success) {
         if (!response.data) return;
-        console.log('llllllll',response);
         let tableDataArr = [];
         for (const order of response.data.content) {
-            tableDataArr.push({
-              id: order._id,
-              user: order.user._id,
-              status:order.status,
-              total: order.total,
+          tableDataArr.push({
+            id: order._id,
+            user: order.user._id,
+            status: order.status,
+            total: order.total,
             action: <TableAction id={order._id} onView={handleView} />,
           });
-          }
-        // }
+        }
 
         if (!unmounted) {
           setTotalElements(response.data.totalElements);
@@ -157,23 +118,14 @@ console.log("selectedOrder",selectedOrder);
     return () => {
       unmounted = true;
     };
-  }, [pagination, selectedPharmacyId, refresh]);
+  }, [pagination, refresh]);
 
   return (
     <React.Fragment>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
         Orders
       </Typography>
-      <Grid container spacing={2}>
-        
-        <Grid item xs={12}>
-          <SearchBar
-            onSearch={handleSearch}
-            placeholderText="Search Orders..."
-          />
-        </Grid>
-        
-      </Grid>
+
       {isLoading ? (
         <Box
           sx={{
@@ -214,26 +166,16 @@ console.log("selectedOrder",selectedOrder);
           selectedOrder?.status === "paid"
             ? `Paid Order - ${selectedOrder?._id}`
             : selectedOrder?.status === "pending"
-              ? `Pending Order - ${selectedOrder._id}`
-              : selectedOrder?.status === "confirmed"
-              ? `Confirmed Order - ${selectedOrder._id}`
+            ? `Pending Order - ${selectedOrder._id}`
+            : selectedOrder?.status === "confirmed"
+            ? `Confirmed Order - ${selectedOrder._id}`
             : selectedOrder?._id
         }
         width={"95vw"}
         show={showPopup}
         onClose={handlePopupClose}
       >
-        {selectedOrder?.status === "paid" ? (
-          <ApprovedOrder
-            order={selectedOrder}
-            onDataUpdate={handleDataUpdate}
-          />
-        ) : (
-        <UnApprovedOrder
-            order={selectedOrder}
-            onDataUpdate={handleDataUpdate}
-          />
-        )}
+        <Order order={selectedOrder} onDataUpdate={handleDataUpdate} />
       </Popup>
     </React.Fragment>
   );
